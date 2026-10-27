@@ -15,11 +15,18 @@
   unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
 /* Палитра — одно место; three и canvas читают цвета через getComputedStyle (PROTO-BASE §9). */
 :root{
-  --page:#9fd6f5; --sky:#bfe6ff; --ink:#2b2d42; --muted:#6b6f85; --card:#fffaf0; --card-edge:#f1dcb3;
-  --sand:#f4d9a0; --sand-dark:#e6bf7d; --dune:#eac68a; --soil-dry:#c79a64; --soil-rim:#a87a49; --soil-wet:#6b4a2f;
-  --wet:#cf9f63; --pot:#d9784b; --pot-lip:#ec9466; --wood:#b9824c; --curb:#f3ece0; --stone:#b9b3a8; --pond-dry:#a9845a; --water:#4fb8f0; --trunk:#9b6b3f; --palm-dry:#c2a165; --rim-ok:#fff3cf; --soil-far:#b8905f; --soil-far-rim:#9a6f43; --grass:#86d160; --grass-dark:#58b04a; --leaf:#4f9e3f;
-  --path:#fae9c4; --path-edge:#e4c287; --riverbed:#dcb57b; --riverbed-dark:#c39a60; --plot:#e2b97a; --adobe:#fbefdc; --roof:#fffaf1; --plinth:#e9cfa9; --door:#4f8fd6; --window:#3d6e9e; --rock:#c4a47e; --crown-dry:#b8a063; --fruit:#ff9a3c;
-  --cloud:#ffffff; --cloud-shade:#d6e6ff; --rain:#8fd0ff; --shadow:#3b5b8c; --cheek:#ff9db8;
+  --page:#8fd3f7; --sky:#a8e0ff; --ink:#2b2d42; --muted:#6b6f85; --card:#fffaf0; --card-edge:#f1dcb3;
+  /* сочная пустыня (решение Андрея 27.10, пресет «Тун-игрушка»): абрикосовый песок, терракота, бирюзовая вода */
+  --sand:#f3d6a2; --sand-dark:#e5b97f; --sand-light:#fbe8c6; --dune:#edcb95;   /* 27.10: мягче, не выжженная — но зелень на ней всё ещё видна */ --soil-dry:#c9864d; --soil-rim:#a8623a; --soil-wet:#6a3c22;
+  --wet:#dc9a58; --pot:#cf5130; --pot-lip:#ec7a4e; --wood:#c47a3c; --curb:#fff4e2; --stone:#d2bfa8; --pond-dry:#b4784a; --water:#25c3e6; --trunk:#9a5a32; --palm-dry:#c9a058; --rim-ok:#fff3cf; --soil-far:#b47844; --soil-far-rim:#90572f; --grass:#7cc25b; --grass-light:#a3d676; --grass-deep:#58a447; --grass-dark:#44a046; --leaf:#3ea24a;
+  --path:#fde4b2; --path-edge:#eab06a; --riverbed:#e4ab66; --riverbed-dark:#c68544; --plot:#e6a462; --adobe:#fff1dc; --roof:#fff8ec; --plinth:#f1c794; --door:#2f8fe0; --window:#2b6aa8; --rock:#d39d6a; --crown-dry:#c4a050; --fruit:#ff7a2e;
+  --cloud:#ffffff; --cloud-mid:#e2efff; --cloud-dark:#b3d3f7; --cloud-shade:#d6e6ff; --rain:#8fd0ff; --shadow:#3b5b8c; --cheek:#ff9fbf;
+  --outline:#2b2140; --hemi-ground:#e9c48c; --sun:#fff3dc;
+  --skin1:#ffd9b5; --skin2:#f1bf8e; --skin3:#d39567; --skin4:#a16a45; --hair1:#3b2a20; --hair2:#7a4f2c; --hair3:#e2b24c; --pants:#4b5a8c; --straw:#f2d38a;
+  /* ступени тучки (спайк «полив-процесс»): Облачко → Тучка → Ливень → Гроза → Муссон — темнее и сочнее, у Муссона сиреневый отлив */
+  --cl1-mid:#d9e8fb; --cl1-dark:#a1c2ef; --cl2-lit:#f2f6fd; --cl2-mid:#c3d4ee; --cl2-dark:#89a5d3;
+  --cl3-lit:#e4eaf5; --cl3-mid:#a9bad9; --cl3-dark:#6e82b0; --cl4-lit:#f8f4ff; --cl4-mid:#cdd2f2; --cl4-dark:#949fd8; --bolt:#fff27a;
+  --fill:#3fb2f5; --fill-done:#fff3a0;   /* кольца полива: сколько выпито и готово (светлое — видно и на траве); недолитое — чернила вполсилы */
   --accent:#ff8a3d; --accent-dark:#e0661c; --good:#5bc84f; --warn:#ff6a5c; --star:#ffc93c;
   --rb1:#ff5a5a; --rb2:#ff9f40; --rb3:#ffe14d; --rb4:#6ee06a; --rb5:#4fc3ff; --rb6:#5a74ff; --rb7:#b46bff;
   --fl1:#ff6fae; --fl2:#ffd23f; --fl3:#ff5a5a; --fl4:#b07cff; --fl5:#ffffff; --fl6:#ff9f40;
@@ -250,8 +257,161 @@ function bedClass(R){ for (let c = 0; c < CFG.CLASS_R.length; c++) if (R <= clas
 // (грядки рядами) → сад вдоль сухого русла (лунки деревьев) → поля у оазиса → оазис. Лестница размеров — из маршрута.
 const PLACES = {
   village: { id: 'village', name: 'Деревня у оазиса', w: 40, h: 64, time: 50, grow: 0.85, start: { x: 20, y: 60 } },
+  valley: { id: 'valley', name: 'Долина великого дерева', w: 56, h: 126, time: 150, start: { x: 28, y: 121 }, water: true, build: 'valley' },
+  lake: { id: 'lake', name: 'Пересохшее озеро', w: 92, h: 92, time: 160, start: { x: 46, y: 88 }, water: true, build: 'lake' },
+  fork: { id: 'fork', name: 'Развилка у холма', w: 112, h: 80, time: 160, start: { x: 56, y: 76 }, water: true, build: 'fork' },
 };
 function levelDef(li){ return typeof li === 'string' ? PLACES[li] : LEVELS[li]; }
+
+// СПАЙК «полив-процесс» (27.10, Андрей: «не ощущаю роста; нет кайфа выращивать; не вижу усилия — только стал, сразу всё
+// вырастил; уровни — набор клумб; тучка только чуть больше»). Правило «накрыл целиком — расцвело» снято. Растение пьёт:
+// вода в секунду = сила дождя · его площадь под тенью; нужно воды = площадь · жажда вида. Мелочь распускается на лету,
+// своё по росту — пара секунд по стадиям, крупнее тучки — тяжело и долго, но идёт (как жёсткая трава в Grass Master).
+// Тучка растёт от площади распустившегося и с радиусом переходит на ступень выше: у ступени своя сила дождя —
+// прошлое становится мелочью, которая лопается по пути.
+const WATER = {
+  STAGES: [   // ступени тучки: с какого радиуса тени, сила дождя и что теперь по силам
+    { name: 'Облачко', r: 0, power: 1, kind: 'flowerbed' },
+    { name: 'Тучка', r: 2.3, power: 2.2, kind: 'tree' },
+    { name: 'Ливень', r: 3.9, power: 5, kind: 'row' },
+    { name: 'Гроза', r: 6.2, power: 11, kind: 'grove' },
+    { name: 'Муссон', r: 8.6, power: 24, kind: 'bigtree' },
+  ],
+  // жажда вида: столько секунд пьёт растение под тенью целиком при силе 1. Своё по ступени — ~2 с, ступенью ниже — мгновенно
+  THIRST: { sprout: 0.25, pot: 0.6, flowerbed: 2, bush: 4.4, tree: 4.4, row: 10, grove: 22, bigtree: 96, oasis: 96 },
+  GROW_K: 0.08,       // рост: r = R0·√(1 + площадь распустившегося · GROW_K)
+  WET_TICK: 0.2,      // событие «пьёт» не чаще, с, на растение
+  BIG_REL: 0.3,       // растения от этой доли тени «пьют» с кольцом и звуком; мельче — просто лопаются
+  FINAL_CAP: 0.6,     // великое дерево до Муссона набирает воду только до этой доли: пьёт, но сил не хватает
+  BOLT_STAGE: 3,      // с Грозы — молния: раз в BOLT_EVERY бьёт в самое крупное неполитое растение под тенью и доливает BOLT_WET
+  BOLT_EVERY: 1.3, BOLT_WET: 0.3,
+};
+function waterStage(r){ let s = 0; WATER.STAGES.forEach((st, k) => { if (r >= st.r - 1e-9) s = k; }); return s; }
+
+// Долина великого дерева — места снизу вверх, у каждого своя лестница: окраина деревни (ростки на лужайках, горшки у дверей,
+// клумбы во дворах) → сад у сухого ручья (кусты живой изгородью, деревья рядами) → огороды за заборами → рощи на склоне →
+// холм с великим деревом. В каждом месте есть и прошлая мелочь — большой тучке она лопается по пути.
+// Набор для мест спайка: add — растение вида kind (b.need — сколько ему пить), meadow — лужайка ростков, done — уровень
+// в том же виде, что у генератора. Первым добавляется финал (lmId = 0).
+function waterKit(L, seed){
+  const beds = [], rnd = mulberry32(seed), decor = { houses: [], paths: [], river: [], fences: [], rocks: [] };
+  const add = (kind, shape, x, y, rx, ry, rot) => {
+    const b = Object.assign(makeBed(beds.length, 0, shape, x, y, rx, ry || rx, rot || 0), { cluster: -1, estate: -1, gate: -1, kind });
+    b.cls = bedClass(b.R); b.need = b.area * WATER.THIRST[kind]; beds.push(b); return b;
+  };
+  const meadow = (x, y, R, n) => {   // лужайка ростков: n ростков в круге R, не ближе 0,55 м друг к другу
+    for (let k = 0, tr = 0; k < n && tr < n * 30; tr++){
+      const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * R, px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr, s = 0.16 + rnd() * 0.08;
+      if (beds.some(b => Math.hypot(b.x - px, b.y - py) < b.R + s + 0.3)) continue;
+      add('sprout', 'circle', px, py, s); k++;
+    }
+  };
+  const done = () => ({ w: L.w, h: L.h, time: L.time, start: L.start, beds, lmId: 0, clusters: [], estates: [], gk: WATER.GROW_K, decor, place: L.id, gates: [], water: true });
+  return { beds, rnd, decor, add, meadow, done };
+}
+function buildValley(L){
+  const { rnd, decor, add, meadow, done } = waterKit(L, 2710);
+  add('bigtree', 'circle', 28, 10.5, 7);   // lmId = 0: на холме в конце тропы
+  // 1. окраина деревни (y 100–124): дома по сторонам тропы, у дверей горшки, во дворах клумбы, вдоль тропы лужайки ростков
+  for (const [hx, hy, side] of [[11, 117, 1], [11, 106, 1], [45, 116, -1], [45, 105, -1]]){
+    decor.houses.push({ x: hx, y: hy, w: 4, d: 3.2, door: side });
+    add('pot', 'circle', hx + side * 3, hy - 1.2, 0.45); add('pot', 'circle', hx + side * 3, hy + 1.2, 0.4);
+    add('flowerbed', 'circle', hx - side * 5.4 + side * 0.2, hy, 1.15 + rnd() * 0.2);
+  }
+  meadow(28, 116.6, 2.2, 14); add('pot', 'circle', 26.6, 112.8, 0.45);   // первые секунды: ростки прямо под тучкой и горшок впереди
+  for (const [x, y, R, n] of [[22.5, 117, 2.2, 10], [33, 112, 2.6, 16], [22, 106, 2.6, 16], [34, 101, 3, 18], [17, 99, 2.4, 12], [40, 96, 2.4, 12]]) meadow(x, y, R, n);
+  for (const [x, y] of [[26.2, 101.5], [30, 107], [19.5, 112]]) add('flowerbed', 'circle', x, y, 1.05);
+  for (const [x, y] of [[6, 100], [50, 99], [7, 123]]) add('bush', 'circle', x, y, 0.85);   // кусты — уже видно, что впереди крупнее
+  // 2. сад у сухого ручья (y 72–98): ручей наискось, по берегам деревья рядами, вдоль тропы — кусты живой изгородью
+  decor.river = [[2, 92], [12, 88], [24, 84], [34, 80], [46, 77], [55, 74]];
+  for (const [x, y, R] of [[7, 95.5, 1.8], [14, 93.5, 2], [21, 91, 1.9], [36, 86.5, 2], [44, 84, 1.8], [51, 82, 1.9],
+    [6, 84, 1.9], [16, 80, 2.1], [29.4, 73.4, 2], [42, 72, 1.9]]) add('tree', 'circle', x, y, R);
+  for (let k = 0; k < 6; k++){ add('bush', 'circle', 24.4, 96 - k * 3.6, 0.8 + rnd() * 0.15); add('bush', 'circle', 31.6, 95 - k * 3.6, 0.8 + rnd() * 0.15); }
+  for (const [x, y, R, n] of [[48, 92, 2.6, 14], [9, 76, 2.4, 12], [52, 70, 2, 10]]) meadow(x, y, R, n);
+  for (const [x, y] of [[40, 93], [12, 72.5]]) add('flowerbed', 'circle', x, y, 1.2);
+  // 3. огороды за заборами (y 42–70): по три грядки-огорода с каждой стороны тропы, в углах — клумбы и горшки
+  for (const [x0, side] of [[5, -1], [33, 1]]){
+    const fx0 = x0, fx1 = x0 + 18; decor.fences.push({ x0: fx0, y0: 44, x1: fx1, y1: 68 });
+    for (let k = 0; k < 3; k++) add('row', 'rect', x0 + 9, 49 + k * 7.6, 3.4, 1.15, 0);   // грядки огорода
+  }
+  for (const [x, y] of [[26, 64], [30, 56], [26, 48]]) add('flowerbed', 'circle', x, y, 1.1);
+  for (const [x, y] of [[24.5, 60], [31.5, 52], [24.5, 44.5], [2.6, 58], [53.4, 50]]) add('pot', 'circle', x, y, 0.45);
+  for (const [x, y] of [[3, 41], [53, 41], [3, 70], [53.6, 65.6]]) add('bush', 'circle', x, y, 0.9);
+  // 4. рощи на склоне (y 18–42): по две рощи с каждой стороны, между ними одинокие деревья и кусты
+  for (const [x, y, R] of [[9.5, 35, 4.4], [46.5, 34, 4.6], [10, 23, 4.2], [46, 22.5, 4.4]]) add('grove', 'circle', x, y, R);
+  for (const [x, y, R] of [[20.5, 37, 1.9], [35.5, 29, 2], [20, 27, 1.8]]) add('tree', 'circle', x, y, R);
+  for (const [x, y, R, n] of [[28, 39, 2.6, 14], [28, 28, 2.4, 12]]) meadow(x, y, R, n);
+  // 5. холм с великим деревом (y 0–18): венок клумб вокруг холма
+  for (const [x, y] of [[14, 6], [42, 6], [15, 16.5], [41, 16.5]]) add('flowerbed', 'circle', x, y, 1.3);
+  decor.paths.push([[28, 126], [28, 100], [27.5, 84], [28.5, 70], [28, 44], [28, 18.5]]);
+  decor.rocks = [[2, 112, 1], [54, 110, 0.9], [2.5, 50, 0.8], [53.6, 60, 1], [3, 14, 1.1], [53, 12, 1], [20, 3, 0.9], [37, 3.5, 0.8]];
+  return done();
+}
+
+// Пересохшее озеро — квадрат, тропа кольцом вокруг сухого озера. По часовой от въезда: деревня (низ) → сад (лево) →
+// огороды (верх) → рощи (право); на внутреннем берегу — прошлая мелочь. Финал — само озеро в центре: Муссон его наполняет.
+function buildLake(L){
+  const { rnd, decor, add, meadow, done } = waterKit(L, 3301), C = 46, at = (a, r) => [C + r * Math.cos(a * Math.PI / 180), C + r * Math.sin(a * Math.PI / 180)];
+  add('oasis', 'circle', C, C, 7.5);                                                          // lmId = 0: озеро
+  decor.lake = { x: C, y: C, R: 13 };
+  decor.paths.push(Array.from({ length: 29 }, (_, k) => at(90 + k * 360 / 28, 24)), [[C, 92], [C, 70]]);
+  // деревня внизу: дома у кольца, горшки у дверей, клумбы во дворах, лужайки вдоль въезда
+  for (const a of [66, 114]){ const [hx, hy] = at(a, 34), side = hx < C ? 1 : -1; decor.houses.push({ x: hx, y: hy, w: 4, d: 3.2, door: side });
+    add('pot', 'circle', hx + side * 3, hy - 1.2, 0.45); add('pot', 'circle', hx + side * 3, hy + 1.2, 0.4); add('flowerbed', 'circle', hx - side * 5.6, hy + 1, 1.2); }
+  meadow(C, 84, 2.2, 14); add('pot', 'circle', C - 1.4, 80, 0.45);
+  for (const [a, r, R, n] of [[80, 29, 2.4, 14], [100, 29, 2.4, 14], [70, 19, 2.2, 12], [110, 19, 2.2, 12], [90, 34, 2.6, 16]]) meadow(...at(a, r), R, n);
+  for (const [a, r] of [[82, 17], [98, 17], [90, 18.5]]) add('flowerbed', 'circle', ...at(a, r), 1.1);
+  for (const a of [128, 136]) add('bush', 'circle', ...at(a, 29), 0.85);
+  // сад слева: деревья снаружи кольца и на берегу, кусты живой изгородью вдоль тропы
+  for (const [a, r, R] of [[150, 33, 2], [165, 36, 2.1], [180, 33, 1.9], [195, 36, 2], [210, 32, 1.9], [158, 18, 1.8], [190, 18, 1.9]]) add('tree', 'circle', ...at(a, r), R);
+  for (let k = 0; k < 9; k++) add('bush', 'circle', ...at(145 + k * 8, 27.6), 0.8 + rnd() * 0.15);
+  meadow(...at(175, 42), 2.4, 12); add('flowerbed', 'circle', ...at(205, 18), 1.2);
+  add('grove', 'circle', ...at(208, 39), 4.2); for (const a of [138, 226]) add('tree', 'circle', ...at(a, 38), 2);   // старый сад в углу
+  // огороды наверху: два участка за заборами снаружи кольца, на берегу — клумбы и горшки
+  for (const a of [248, 292]){ const [x, y] = at(a, 34); decor.fences.push({ x0: x - 9, y0: y - 8, x1: x + 9, y1: y + 6 });
+    for (let k = 0; k < 3; k++) add('row', 'rect', x, y - 4.6 + k * 4.6, 3.4, 1.1, 0); }
+  for (const a of [255, 285]) add('flowerbed', 'circle', ...at(a, 18), 1.1);
+  for (const a of [240, 270, 300]) add('pot', 'circle', ...at(a, 21), 0.45);
+  for (const a of [228, 312]) add('bush', 'circle', ...at(a, 28.5), 0.9);
+  // рощи справа: две большие снаружи, между ними деревья, у берега лужайка
+  for (const [a, r, R] of [[330, 35, 4.4], [20, 35, 4.6]]) add('grove', 'circle', ...at(a, r), R);
+  for (const [a, r, R] of [[355, 36, 4.2], [343, 18, 1.9], [12, 18, 2]]) add(R > 3 ? 'grove' : 'tree', 'circle', ...at(a, r), R);
+  meadow(...at(0, 20), 2.2, 10); meadow(...at(45, 30), 2.4, 12); meadow(...at(240, 41), 2.4, 12); meadow(...at(320, 21), 2.2, 10);
+  for (const a of [318, 30]) add('bush', 'circle', ...at(a, 27.8), 0.9);
+  for (const a of [40, 50]) add('bush', 'circle', ...at(a, 22), 0.9);
+  decor.rocks = [[4, 4, 1.1], [88, 5, 1], [5, 88, 0.9], [87, 86, 1], [46, 3, 0.8], [3, 46, 0.9], [89, 46, 0.8]];
+  return done();
+}
+
+// Развилка у холма — широкая карта. От деревни тропа расходится: слева огороды и кусты, справа сады и рощи, и обе
+// ветки сходятся у великого дерева на холме. На Муссон одной ветки мало — порядок веток выбираешь сам.
+function buildFork(L){
+  const { rnd, decor, add, meadow, done } = waterKit(L, 4409);
+  add('bigtree', 'circle', 56, 12, 7);                                                         // lmId = 0
+  decor.paths.push([[56, 80], [56, 58]], [[56, 58], [36, 52], [22, 39], [26, 24], [46, 14]], [[56, 58], [76, 52], [90, 39], [86, 24], [66, 14]]);
+  // деревня у развилки
+  for (const [hx, hy, side] of [[44, 71, 1], [68, 71, -1], [44, 63, 1], [68, 63, -1]]){ decor.houses.push({ x: hx, y: hy, w: 4, d: 3.2, door: side });
+    add('pot', 'circle', hx + side * 3, hy - 1.2, 0.45); add('pot', 'circle', hx + side * 3, hy + 1.2, 0.4); add('flowerbed', 'circle', hx - side * 5.6, hy, 1.15); }
+  meadow(56, 72, 2.2, 14); add('pot', 'circle', 57.4, 68, 0.45);
+  for (const [x, y, R, n] of [[56, 64, 2.4, 14], [30, 74, 2.6, 16], [82, 74, 2.6, 16], [56, 52, 2.4, 12]]) meadow(x, y, R, n);
+  for (const [x, y] of [[50, 56], [62, 56]]) add('flowerbed', 'circle', x, y, 1.1);
+  // левая ветка: кусты вдоль тропы, огороды за заборами, в конце ветки — роща
+  for (let k = 0; k < 7; k++) add('bush', 'circle', 46 - k * 3.4, 57.8 - k * 1.6, 0.8 + rnd() * 0.15);
+  for (const [x, y] of [[10, 44], [10, 30]]){ decor.fences.push({ x0: x - 8.5, y0: y - 6, x1: x + 8.5, y1: y + 6 });
+    for (let k = 0; k < 3; k++) add('row', 'rect', x, y - 4 + k * 4, 3.2, 1.05, 0); }
+  for (const [x, y] of [[30, 46], [16, 56], [34, 30]]) add('flowerbed', 'circle', x, y, 1.2);
+  add('grove', 'circle', 33, 16, 4.4); add('grove', 'circle', 12, 12, 4.2); meadow(26, 62, 2.4, 12); meadow(40, 34, 2.4, 12);
+  // правая ветка: сад деревьями, две рощи у холма
+  for (const [x, y, R] of [[70, 47, 1.9], [80, 44, 2], [94, 50, 1.9], [99, 40, 2.1], [84, 32, 1.9], [95, 28, 2], [66, 28, 2], [106, 47, 1.9]]) add('tree', 'circle', x, y, R);
+  for (let k = 0; k < 6; k++) add('bush', 'circle', 66 + k * 3.4, 55.6 - k * 1.6, 0.8 + rnd() * 0.15); meadow(77, 64, 2.3, 12);
+  for (const [x, y, R] of [[104, 16, 4.4], [80, 16, 4.6]]) add('grove', 'circle', x, y, R);
+  meadow(86, 60, 2.4, 12); for (const [x, y] of [[104, 60], [72, 36]]) add('flowerbed', 'circle', x, y, 1.2);
+  // у холма: клумбы венком
+  for (const [x, y] of [[44, 4], [68, 4], [44, 22], [68, 22]]) add('flowerbed', 'circle', x, y, 1.3);
+  decor.rocks = [[3, 76, 1], [108, 76, 0.9], [3, 4, 1.1], [108, 5, 1], [56, 30, 1.2], [56, 40, 0.8], [20, 70, 0.8], [92, 70, 0.9]];
+  return done();
+}
+const WATER_BUILD = { valley: buildValley, lake: buildLake, fork: buildFork };
 function buildPlace(L){
   const beds = [], add = (cls, shape, x, y, rx, ry, rot, extra) => {
     const b = Object.assign(makeBed(beds.length, 0, shape, x, y, rx, ry || rx, rot || 0), { cluster: -1, estate: -1, gate: -1 }, extra || {});
@@ -313,7 +473,7 @@ function tierPlan(L, gk){
 }
 // Карта уровня по номеру: сид 5000 + n. Снизу вверх: старт → ярус 0 (веха 0) → … → ярус K (оазис).
 function generateLevel(li){
-  if (typeof li === 'string') return buildPlace(PLACES[li]);   // уровень-место собран руками
+  if (typeof li === 'string') return PLACES[li].water ? WATER_BUILD[PLACES[li].build](PLACES[li]) : buildPlace(PLACES[li]);   // уровень-место собран руками
   const L = LEVELS[li], rnd = mulberry32(5000 + L.n), gk = CFG.GROW_K * (L.grow || 1), tiers = tierPlan(L, gk), K = L.K;
   // ширина — чтобы по обе стороны вехи встала еда яруса, а у краёв — сады
   const Rlm = tiers[K].P, W = Math.max(26, Math.round(CFG.TIER_WIDTH * Rlm + 12)), cx = W / 2;
@@ -411,7 +571,8 @@ function createState(li, opts){
   return {
     li, lv, t: 0, acc: 0, gk: lv.gk || CFG.GROW_K,
     struggle: (opts && opts.struggle) || CFG.STRUGGLE, wet: lv.beds.map(() => 0), wetTickAt: {},   // спайк «полив больших»
-    cloud: { x: lv.start.x, y: lv.start.y, vx: 0, vy: 0, r, moist: 0, cls: cloudClass(r) },
+    cloud: { x: lv.start.x, y: lv.start.y, vx: 0, vy: 0, r, moist: 0, cls: cloudClass(r), stage: 0 },
+    water: !!lv.water, wetT0: {},   // спайк «полив-процесс»
     bloomed: lv.beds.map(() => false), bloomedArea: 0,
     totalArea: lv.beds.reduce((s, b) => s + b.area, 0),
     combo: { n: 0, until: -1 }, storm: { until: -1 }, tooBigAt: {}, gateReady: {},
@@ -475,6 +636,7 @@ function step(S, input){
   const m = CFG.EDGE_MARGIN, W = S.lv.w, H = S.lv.h;
   if (c.x < m){ c.x = m; c.vx = Math.max(0, c.vx); } if (c.x > W - m){ c.x = W - m; c.vx = Math.min(0, c.vx); }
   if (c.y < m){ c.y = m; c.vy = Math.max(0, c.vy); } if (c.y > H - m){ c.y = H - m; c.vy = Math.min(0, c.vy); }
+  if (S.water) return stepWater(S, ev);
   // затягивание, как в hole.io: тень почти накрыла цель — мягко подтянуть к центру (правило «целиком» не меняется).
   // Оазис тянет всегда, как только тень больше него; веха — так же, но не против пальца; крупные для тучки грядки
   // (rel ≥ REL_BIG) — ближе и слабее, тоже если палец не ведёт прочь.
@@ -541,6 +703,58 @@ function step(S, input){
   return ev;
 }
 
+// Шаг спайка «полив-процесс» (после движения): каждое растение под тенью пьёт, полное — распускается, тучка растёт и
+// переходит на ступени. Победа — великое дерево (от него волна весны, как от оазиса), таймер кончился — проигрыш.
+function stepWater(S, ev){
+  const c = S.cloud, dt = CFG.DT, P = WATER.STAGES[c.stage].power, lm = S.lv.beds[S.lmId];
+  let won = false;
+  if (c.stage >= WATER.BOLT_STAGE && S.t >= (S.boltAt || 0)){   // Гроза: молния в самое крупное неполитое под тенью
+    S.boltAt = S.t + WATER.BOLT_EVERY; let hit = null;
+    for (const b of S.lv.beds) if (!S.bloomed[b.id] && Math.hypot(b.x - c.x, b.y - c.y) < c.r && (!hit || b.area > hit.area)) hit = b;
+    if (hit){ const cap = hit.id === S.lmId && c.stage < WATER.STAGES.length - 1 ? WATER.FINAL_CAP : 1;
+      S.wet[hit.id] = Math.min(cap, S.wet[hit.id] + WATER.BOLT_WET); ev.push({ type: 'bolt', id: hit.id }); }
+  }
+  for (const b of S.lv.beds){
+    if (S.bloomed[b.id]) continue;
+    const Rd = Math.sqrt(b.area / Math.PI), d = Math.hypot(b.x - c.x, b.y - c.y);   // растение — круг той же площади
+    if (d >= c.r + Rd) continue;
+    const under = discOverlap(c.x, c.y, c.r, b.x, b.y, Rd) * b.area;               // м² под тенью
+    if (under <= 0) continue;
+    const cap = b.id === S.lmId && c.stage < WATER.STAGES.length - 1 ? WATER.FINAL_CAP : 1, was = S.wet[b.id];
+    if (was <= 0) S.wetT0[b.id] = S.t;   // начало полива: оболочка показывает кольцо только тому, что пьёт заметно долго
+    S.wet[b.id] = Math.min(cap, was + P * under / b.need * dt);
+    if (cap < 1 && was < cap && S.wet[b.id] >= cap) ev.push({ type: 'capped', id: b.id });
+    const rel = b.R / c.r;
+    if (S.wet[b.id] < 1){
+      if (rel >= WATER.BIG_REL && !(S.t - (S.wetTickAt[b.id] || -9) < WATER.WET_TICK)){ S.wetTickAt[b.id] = S.t; ev.push({ type: 'wetting', id: b.id, wet: S.wet[b.id], rel, full: b.need / (P * under) }); }
+      continue;
+    }
+    // распустилось
+    S.bloomed[b.id] = true; S.bloomedArea += b.area;
+    const crumb = rel < CFG.REL_CRUMB;
+    if (!crumb){ S.combo.n = S.t <= S.combo.until ? S.combo.n + 1 : 1; S.combo.until = S.t + CFG.COMBO_WINDOW; }
+    if (S.firstBloomT < 0) S.firstBloomT = S.t;
+    ev.push({ type: 'bloom', id: b.id, cls: b.cls, combo: S.combo.n, rel, kind: b.kind, took: S.t - (S.wetT0[b.id] ?? S.t) });
+    if (b.id === S.lmId){ won = true; continue; }
+    const r0 = c.r, st0 = c.stage;
+    c.moist += b.area; c.r = CFG.R0 * Math.sqrt(1 + c.moist * S.gk); c.stage = waterStage(c.r);
+    ev.push({ type: 'grow', r: c.r, dr: c.r - r0 });
+    for (let k = st0 + 1; k <= c.stage; k++) ev.push({ type: 'evolve', stage: k, name: WATER.STAGES[k].name });
+    if (!crumb && S.combo.n === CFG.STORM_AT){ S.storm.until = S.t + CFG.STORM_TIME; ev.push({ type: 'storm' }); }
+  }
+  if (won){
+    S.ownPct = ownPct(S);
+    const ids = S.lv.beds.filter(b => !S.bloomed[b.id]).map(b => ({ id: b.id, d: Math.hypot(b.x - lm.x, b.y - lm.y) })).sort((a, b) => a.d - b.d).map(x => x.id);
+    for (const id of ids) S.bloomed[id] = true;
+    S.bloomedArea = S.totalArea;
+    ev.push({ type: 'spring', ids, own: S.ownPct });
+    endGame(S, 'win', ev);
+  } else if (!S.ready && c.stage === WATER.STAGES.length - 1){ S.ready = true; S.readyT = S.t; ev.push({ type: 'ready', id: lm.id }); }   // Муссон — дерево по силам
+  S.t += dt;
+  if (S.t >= S.lv.time - 1e-9) endGame(S, 'lose', ev);
+  return ev;
+}
+
 // Реальное время кадра → шаги ядра. Кадр режется до MAX_FRAME, шагов не больше MAX_SUBSTEPS.
 function advance(S, input, dtReal){
   const ev = [];
@@ -564,6 +778,17 @@ function stars(S){
 // lazy — «ленивый» (берёт только мелкое и не растёт: таймер должен его ловить).
 function botTarget(S, kind){
   const c = S.cloud; let best = null, bv = -1, any = null, ad = Infinity, near = null, nd = Infinity;
+  if (S.water){   // спайк «полив-процесс»: всё можно полить — ценность = площадь / (дорога + время полива в метрах пути)
+    const P = WATER.STAGES[c.stage].power, view = kind === 'vision' ? CFG.BOT_VIEW0 + CFG.BOT_VIEWK * c.r : Infinity;
+    for (const b of S.lv.beds){
+      if (S.bloomed[b.id] || (b.id === S.lmId && !S.ready && S.wet[b.id] >= WATER.FINAL_CAP - 1e-6)) continue;   // дерево до Муссона — не дальше предела
+      const d = Math.hypot(b.x - c.x, b.y - c.y); if (d > view) continue;
+      const tLeft = (1 - S.wet[b.id]) * b.need / (P * Math.min(b.area, Math.PI * c.r * c.r)), v = b.area / (d + CFG.BOT_DIST0 + tLeft * 15);
+      if (v > bv){ bv = v; best = b; }
+      if (d < ad){ ad = d; any = b; }
+    }
+    return best || any;
+  }
   // «собиратель» оставляет оазис на потом, пока не набрал 3★ или не поджимает время
   const skipLm = kind === 'sweeper' && ownPct(S) < CFG.STAR3 + 0.02 && S.t < S.lv.time * CFG.BOT_SWEEP_UNTIL;
   const fit = kind === 'lazy' ? CFG.BOT_LAZY_FIT : CFG.BOT_FIT, view = kind === 'vision' ? CFG.BOT_VIEW0 + CFG.BOT_VIEWK * c.r : Infinity;
@@ -628,7 +853,7 @@ const VIEW = {
   JOY_PX: 56,          // палец на столько px от точки касания — полная тяга
   JOY_FOLLOW: 1.5,     // дальше JOY_PX * JOY_FOLLOW точка касания подтягивается за пальцем
   CAM_PITCH: 62,       // наклон камеры к земле, градусы (круче — меньше горизонта и тучка меньше закрывает тень)
-  CAM_FOV: 50,         // вертикальный угол обзора, градусы
+  CAM_FOV: 40,         // вертикальный угол обзора, градусы (пресет «Тун-игрушка»: меньше перспективы — вещи как игрушки на столе)
   VIEW_W0: 6,          // видимая ширина у тучки = VIEW_W0 + VIEW_WK * R^VIEW_WP, м (R — следующая цель)
   VIEW_WK: 5.4,
   VIEW_WP: 0.85,       // < 1: обзор растёт медленнее тучки — от вехи к вехе она на экране крупнее
@@ -679,17 +904,137 @@ function log(kind, name, info){            // журнал [game] — одна �
   console.log('[game] ' + JSON.stringify({ t: +(G.vt / 1000).toFixed(3), kind, name, info: info === undefined ? '' : String(info) }));
 }
 
-// --- three: рендерер, камера, свет ---
+// --- three: рендерер, камера, свет и тун-материалы ---
+// Вид — пресет «Тун-игрушка» (~/Claude/ART-STYLES.md §1, как «Отряд НЛО»): свет ступенями, чернильный контур
+// вывернутой оболочкой, мягкие тени-пятна, сочная палитра. Числа вида — здесь, цвета — только токены CSS.
+const SH = {
+  GRAD: [110, 190, 255],  // три ступени тун-света — главное в «игрушечности»
+  OUT_A: 0.025,           // контур вещи размера R: OUT_A + OUT_B · R^0,85 м — около 2 px, когда вещь того размера, к которому
+  OUT_B: 0.026,           //   сейчас тянется тучка (обзор растёт так же); мелочь рядом с ней почти без контура, как в пресете
+  OUT_MAX: 0.26,
+  OUT_CLOUD: 0.06,        // контур тучки, в её радиусах: персонаж обведён жирнее мира
+  OUT_FLOWER: 0.035,      // контур головок цветов, в размерах головки
+  OUT_PICKET: 0.02,       // штакетник, м
+  BLOB_OP: 0.3,           // тени-пятна: непрозрачность в центре
+  BLOB_SUN: 0.35,         // пятно сдвинуто от солнца на эту долю высоты вещи
+  DPR_MAX: 2, DPR_MIN: 1, DPR_SLOW_MS: 21,   // 3D-разрешение: партия 2 с медленнее ~48 к/с — ×0,8 за шаг (текст на 2D всегда чёткий)
+};
+// Палитра мира: какие токены у неба и земли, какой свет. Новый мир — новая строка, не правка кода.
+const THEMES = {
+  desert: { sky: '--sky', ground: '--hemi-ground', sunCol: '--sun', hemi: 1.7, sun: 2.1 },
+};
 const cv = $('cv'), fx2d = $('fx2d'), c2 = fx2d.getContext('2d');
-const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, SH.DPR_MAX));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 1.0;
 const scene = new THREE.Scene();
 scene.background = col('--sky');
 scene.fog = new THREE.Fog(col('--sky'), 70, 190);
 const camera = new THREE.PerspectiveCamera(VIEW.CAM_FOV, 1, 0.5, 500);
-scene.add(new THREE.HemisphereLight(0xffffff, 0xe7c48c, 1.5));
-const sun = new THREE.DirectionalLight(0xfff1d6, 1.7); sun.position.set(-30, 60, 25); scene.add(sun);
+const hemi = new THREE.HemisphereLight(0xffffff, col('--hemi-ground'), 1.7);
+const sun = new THREE.DirectionalLight(col('--sun'), 2.1); sun.position.set(-6, 14, 9);   // одно солнце сбоку-сверху, карт теней нет
+scene.add(hemi, sun);
+const SUN_DIR = sun.position.clone().normalize();
+function applyTheme(name){
+  const T = THEMES[name] || THEMES.desert; G.theme = T;
+  scene.background.copy(pal(T.sky)); scene.fog.color.copy(pal(T.sky));
+  hemi.groundColor.copy(pal(T.ground)); hemi.intensity = T.hemi; sun.color.copy(pal(T.sunCol)); sun.intensity = T.sun;
+}
+
+// Тун: свет ступенями (DataTexture 3×1, Nearest).
+const GRAD = (() => { const t = new THREE.DataTexture(new Uint8Array(SH.GRAD), SH.GRAD.length, 1, THREE.RedFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+const toon = (o) => new THREE.MeshToonMaterial(Object.assign({ gradientMap: GRAD }, o));
+
+// Контур «вывернутой оболочкой»: задние грани, раздутые по нормали в пространстве камеры на uTh метров — толщина не зависит
+// от масштаба меша (грядки растянуты по осям). У инстансов толщина — в долях их масштаба (цветы разного размера).
+// Скрытый инстанс (масштаб 0) выносится за кадр. Программа одна; материалы — ступенями толщины по 4 мм, общие на все уровни.
+const OUTLINE_VS = `vec4 mvPosition = vec4( transformed, 1.0 );
+vec3 oN = normal; float oS = 1.0;
+#ifdef USE_INSTANCING
+  mvPosition = instanceMatrix * mvPosition; oN = mat3( instanceMatrix ) * oN; oS = length( instanceMatrix[ 0 ].xyz );
+#endif
+mvPosition = modelViewMatrix * mvPosition;
+mvPosition.xyz += normalize( normalMatrix * oN ) * uTh * oS;
+gl_Position = oS < 1e-5 ? vec4( 2.0, 2.0, 2.0, 1.0 ) : projectionMatrix * mvPosition;`;
+function makeOutlineMat(th){
+  const m = new THREE.MeshBasicMaterial({ color: col('--outline'), side: THREE.BackSide });
+  m.th = { value: th };
+  m.onBeforeCompile = (sh) => { sh.uniforms.uTh = m.th; sh.vertexShader = 'uniform float uTh;\n' + sh.vertexShader.replace('#include <project_vertex>', OUTLINE_VS); };
+  m.customProgramCacheKey = () => 'toon-outline';
+  return m;
+}
+const OUT_MATS = new Map();
+function outlineMat(th){
+  const q = Math.round(Math.min(SH.OUT_MAX, th) / 0.004) * 0.004 || 0.004;
+  let m = OUT_MATS.get(q); if (!m){ m = makeOutlineMat(q); m.userData.keep = true; OUT_MATS.set(q, m); } return m;
+}
+const outTh = (R) => SH.OUT_A + SH.OUT_B * Math.pow(R, 0.85);
+// Нормали оболочки сглажены: у выдавленных и граненых форм они рвутся по рёбрам — контур трескается на углах.
+const HULLS = new WeakMap();
+function hullGeo(geo){
+  let h = HULLS.get(geo); if (h) return h;
+  h = geo.clone(); const P = h.attributes.position, N = h.attributes.normal, acc = new Map();
+  const key = (i) => Math.round(P.getX(i) * 500) + ',' + Math.round(P.getY(i) * 500) + ',' + Math.round(P.getZ(i) * 500);
+  for (let i = 0; i < P.count; i++){ const k = key(i), a = acc.get(k) || [0, 0, 0]; a[0] += N.getX(i); a[1] += N.getY(i); a[2] += N.getZ(i); acc.set(k, a); }
+  for (let i = 0; i < P.count; i++){ const a = acc.get(key(i)), l = Math.hypot(a[0], a[1], a[2]) || 1; N.setXYZ(i, a[0] / l, a[1] / l, a[2] / l); }
+  HULLS.set(geo, h); return h;
+}
+// Обвести меш: оболочка — ребёнок меша (двигается, качается и масштабируется вместе с ним).
+function outline(mesh, th, smooth){
+  const o = new THREE.Mesh(smooth === false ? mesh.geometry : hullGeo(mesh.geometry), typeof th === 'number' ? outlineMat(th) : th);
+  o.userData.outline = true; mesh.add(o); return o;
+}
+// Обвести InstancedMesh: оболочка делит с ним матрицы инстансов.
+function outlineInst(im, th, smooth){
+  const o = new THREE.InstancedMesh(smooth === false ? im.geometry : hullGeo(im.geometry), outlineMat(th), im.count);
+  o.instanceMatrix = im.instanceMatrix; o.frustumCulled = im.frustumCulled; o.userData.outline = true; return o;
+}
+
+// Слить одноцветные детали в одну геометрию: крона из шаров, листья пальмы — один вызов отрисовки и один контур.
+const _mm = new THREE.Matrix4(), _mq = new THREE.Quaternion(), _me = new THREE.Euler(), _mp = new THREE.Vector3(), _ms = new THREE.Vector3();
+function mergeGeo(parts){   // [geometry, [x, y, z], scale (число или [sx, sy, sz]), [rx, ry, rz]?]
+  const gs = parts.map(([g, p, sc, r]) => { const c = g.index ? g.toNonIndexed() : g.clone(); const k = typeof sc === 'number' ? [sc, sc, sc] : sc;
+    c.applyMatrix4(_mm.compose(_mp.set(p[0], p[1], p[2]), _mq.setFromEuler(_me.set(...(r || [0, 0, 0]), 'YZX')), _ms.set(k[0], k[1], k[2]))); return c; });
+  const n = gs.reduce((a, g) => a + g.attributes.position.count, 0), P = new Float32Array(n * 3), N = new Float32Array(n * 3);
+  let o = 0; for (const g of gs){ P.set(g.attributes.position.array, o * 3); N.set(g.attributes.normal.array, o * 3); o += g.attributes.position.count; g.dispose(); }
+  const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.BufferAttribute(P, 3)); out.setAttribute('normal', new THREE.BufferAttribute(N, 3));
+  out.computeBoundingSphere(); return out;
+}
+
+// Тени-пятна под вещами (пресет): мягкий круг цвета чернил, один InstancedMesh на уровень. Пятно чуть сдвинуто от солнца.
+let BLOB_TEX = null;
+function buildBlobs(list){
+  if (!BLOB_TEX){ const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, '#fff'); g.addColorStop(0.5, 'rgba(255,255,255,0.8)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    BLOB_TEX = new THREE.CanvasTexture(c); }
+  const geo = new THREE.PlaneGeometry(2, 2); geo.rotateX(-Math.PI / 2);
+  const mat = new THREE.MeshBasicMaterial({ color: col('--outline'), map: BLOB_TEX, transparent: true, opacity: SH.BLOB_OP, depthWrite: false });
+  const im = new THREE.InstancedMesh(geo, mat, Math.max(1, list.length)), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3(), s = new THREE.Vector3();
+  const dx = -SUN_DIR.x / SUN_DIR.y * SH.BLOB_SUN, dz = -SUN_DIR.z / SUN_DIR.y * SH.BLOB_SUN;
+  list.forEach((b, i) => im.setMatrixAt(i, m4.compose(p.set(b.x + dx * b.h, (b.y || 0.02) + i * 1e-5, b.z + dz * b.h), q.setFromEuler(e.set(0, b.rot || 0, 0)), s.set(b.rx, 1, b.rz || b.rx))));
+  if (!list.length) im.count = 0;
+  im.renderOrder = 1; return im;
+}
+
+// Тучка — свой тун: три ступени от солнца, но тени голубые («сахарная вата», решение Андрея 27.10) — белая в тени не сереет.
+// uTint — настроение (Emo): белый — как есть, золото — ждёт цель, сизый — гроза. opacity — в униформе (тучка тает на «вау»).
+const CLOUD_VS = `varying vec3 vN;
+void main(){ vN = normalize( mat3( modelMatrix ) * normal ); gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`;
+const CLOUD_FS = `uniform vec3 uLit; uniform vec3 uMid; uniform vec3 uDark; uniform vec3 uTint; uniform vec3 uSun; uniform float uOpacity; varying vec3 vN;
+void main(){ float d = dot( normalize( vN ), uSun ); vec3 c = d > 0.25 ? uLit : d > -0.3 ? uMid : uDark;
+  gl_FragColor = vec4( c * uTint, uOpacity );
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+function cloudMat(){
+  const m = new THREE.ShaderMaterial({ vertexShader: CLOUD_VS, fragmentShader: CLOUD_FS, transparent: true,
+    uniforms: { uLit: { value: col('--cloud') }, uMid: { value: col('--cloud-mid') }, uDark: { value: col('--cloud-dark') }, uTint: { value: new THREE.Color(1, 1, 1) },
+      uSun: { value: SUN_DIR }, uOpacity: { value: 1 } } });
+  Object.defineProperty(m, 'opacity', { get(){ return this.uniforms.uOpacity.value; }, set(v){ this.uniforms.uOpacity.value = v; } });
+  m.tint = m.uniforms.uTint.value; return m;
+}
 
 const World = { scene, camera, renderer, root: null, ground: null, groundTex: null, gctx: null, bedMeshes: new Map(), cloudObj: null, shadow: null, rim: null,
   cam: { x: 0, z: 0, w: 14 }, cloudVis: { r: CFG.R0 } };
@@ -699,14 +1044,40 @@ const isPlace = (li) => typeof li === 'string';
 const seedOf = (li) => isPlace(li) ? 40 : li;
 function disposeTree(o){
   o.traverse(n => { if (n.geometry) n.geometry.dispose();
-    if (n.material) (Array.isArray(n.material) ? n.material : [n.material]).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); });
+    if (n.material) (Array.isArray(n.material) ? n.material : [n.material]).forEach(m => { if (m.userData.keep) return; if (m.map && m.map !== BLOB_TEX) m.map.dispose(); m.dispose(); }); });   // общие материалы контура и текстура пятна живут между уровнями
 }
 
+// Пятно зелени (27.10, Андрей: «зелёный вокруг политого супер ненатуральный и чёткий»): несколько мягких кругов трёх
+// оттенков со смещением и травинки поверх — лужайка с рваным мягким краем. Рисуется тремя ступенями роста (GREEN_STEPS):
+// альфа складывается к середине, край остаётся прозрачным.
+const GREEN_STEPS = [0.45, 0.78, 1];
+function paintGreen(ctx, g, e, last){
+  const P = VIEW.TEX_PPM;
+  if (!g.parts){ const rnd = mulberry32(Math.round(g.x * 131 + g.y * 977) >>> 0);
+    g.rnd = rnd; g.parts = Array.from({ length: 6 }, (_, k) => ({ dx: k ? (rnd() * 2 - 1) * 0.5 : 0, dy: k ? (rnd() * 2 - 1) * 0.5 : 0, r: k ? 0.5 + rnd() * 0.35 : 0.85, c: ['--grass', '--grass-light', '--grass-deep'][k % 3] })); }
+  for (const q of g.parts){
+    const R = Math.max(1, g.R * q.r * e * P), x = (g.x + q.dx * g.R * e) * P, y = (g.y + q.dy * g.R * e) * P, c = css(q.c), gr = ctx.createRadialGradient(x, y, 0, x, y, R);
+    gr.addColorStop(0, c + '99'); gr.addColorStop(0.55, c + '66'); gr.addColorStop(1, c + '00');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
+  }
+  if (last){   // травинки: короткие штрихи светлее и темнее — фактура травы
+    const rnd = g.rnd, n = Math.min(160, Math.round(g.R * g.R * 5) + 4); ctx.lineWidth = 1.3; ctx.lineCap = 'round';
+    for (let k = 0; k < n; k++){ const a = rnd() * 6.283, rr = Math.sqrt(rnd()) * g.R * 0.8, x = (g.x + Math.cos(a) * rr) * P, y = (g.y + Math.sin(a) * rr) * P;
+      ctx.globalAlpha = 0.55; ctx.strokeStyle = css(rnd() < 0.5 ? '--grass-deep' : '--grass-light');
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (rnd() - 0.5) * 2.4, y - 1.6 - rnd() * 2.2); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  }
+}
 // Земля: песок карты на CanvasTexture (на неё рисуются мокрые следы и зелень) + дюны вокруг.
 function paintSand(ctx, lv, li){
   const P = VIEW.TEX_PPM, W = lv.w * P, H = lv.h * P, rnd = mulberry32(77 + seedOf(li));
   ctx.fillStyle = css('--sand'); ctx.fillRect(0, 0, W, H);
-  ctx.globalAlpha = 0.18; ctx.fillStyle = css('--sand-dark');
+  const patch = (color, alpha, n, r0, r1) => { ctx.fillStyle = color;   // крупные пятна-острова песка с мягким краем
+    for (let k = 0; k < n; k++){ const x = rnd() * W, y = rnd() * H, r = (r0 + rnd() * (r1 - r0)) * P, a = rnd() * Math.PI, e = 0.45 + rnd() * 0.25;
+      for (const [f, al] of [[1, 0.5], [0.82, 1]]){ ctx.globalAlpha = alpha * al; ctx.beginPath(); ctx.ellipse(x, y, r * f, r * f * e, a, 0, Math.PI * 2); ctx.fill(); } } };
+  patch(css('--sand-light'), 0.55, Math.round(lv.w * lv.h / 260), 3, 8);
+  patch(css('--sand-dark'), 0.28, Math.round(lv.w * lv.h / 420), 2.5, 6);
+  ctx.globalAlpha = 0.22; ctx.fillStyle = css('--sand-dark');   // гребни дюн
   for (let k = 0; k < 14; k++){ const y = rnd() * H; ctx.beginPath(); ctx.ellipse(rnd() * W, y, 40 + rnd() * 90, 8 + rnd() * 12, rnd() * 0.4 - 0.2, 0, Math.PI * 2); ctx.fill(); }
   ctx.globalAlpha = 0.35;
   for (let k = 0; k < W * H / 90; k++){ ctx.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 1.5, 1 + rnd() * 1.5); }
@@ -716,7 +1087,7 @@ function paintSand(ctx, lv, li){
   ctx.fillStyle = css('--dune');
   const E = 3 * P;
   for (const [x0, y0, x1, y1, rx, ry, rw, rh] of [[0, 0, 0, E, 0, 0, W, E], [0, H, 0, H - E, 0, H - E, W, E], [0, 0, E, 0, 0, 0, E, H], [W, 0, W - E, 0, W - E, 0, E, H]]){
-    const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, css('--dune')); g.addColorStop(1, 'rgba(234,198,138,0)');
+    const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, css('--dune')); g.addColorStop(1, css('--dune') + '00');
     ctx.fillStyle = g; ctx.fillRect(rx, ry, rw, rh);
   }
 }
@@ -732,6 +1103,17 @@ function paintPlace(ctx, lv, alive){
   };
   const along = (pts, step, fn) => { for (let i = 0; i + 1 < pts.length; i++){ const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / step);
     for (let k = 0; k < n; k++){ const f = k / n; fn(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, Math.atan2(y1 - y0, x1 - x0)); } } };
+  if (d.lake){   // озеро: сухое — светлое дно с тёмной кромкой и трещинами; ожило — вода с бликом
+    const L = d.lake, cx = L.x * P, cy = L.y * P, R = L.R * P;
+    if (!alive){ ctx.fillStyle = css('--riverbed-dark'); ctx.globalAlpha = 0.6; ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.06, R * 1.0, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = css('--riverbed'); ctx.globalAlpha = 1; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.94, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = css('--riverbed-dark'); ctx.lineWidth = 1.2; ctx.globalAlpha = 0.55;
+      for (let k = 0; k < 90; k++){ const a = rnd() * 6.283, rr = Math.sqrt(rnd()) * R * 0.92; let x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr;
+        ctx.beginPath(); ctx.moveTo(x, y); for (let j = 0; j < 3; j++){ x += (rnd() - 0.5) * 10; y += (rnd() - 0.5) * 10; ctx.lineTo(x, y); } ctx.stroke(); }
+      ctx.globalAlpha = 1; }
+    else { ctx.fillStyle = css('--water'); ctx.globalAlpha = 0.95; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.94, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = 0.4; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(cx, cy, R * 0.97, R * 0.91, 0, 3.6, 5.2); ctx.stroke(); ctx.globalAlpha = 1; }
+  }
   if (alive && d.river.length){ line(d.river, 2.8, css('--riverbed-dark'), 0.45); line(d.river, 1.9, css('--water'), 0.95); line(d.river, 0.5, '#ffffff', 0.35); }
   if (!alive && d.river.length){   // сухое русло: тёмная кромка, светлее дно, трещины и галька
     line(d.river, 3.1, css('--riverbed-dark'), 0.55); line(d.river, 2.1, css('--riverbed'), 0.95);
@@ -766,10 +1148,12 @@ function buildGround(lv, li){
   const ctx = tc.getContext('2d'); paintSand(ctx, lv, li);
   const tex = new THREE.CanvasTexture(tc); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;   // текстура часто перезаливается: без мипмапов дешевле
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(lv.w, lv.h), new THREE.MeshLambertMaterial({ map: tex }));
-  plane.rotation.x = -Math.PI / 2; plane.position.set(lv.w / 2, 0, lv.h / 2);
-  const outer = new THREE.Mesh(new THREE.PlaneGeometry(lv.w + VIEW.OUTER * 2, lv.h + VIEW.OUTER * 2), new THREE.MeshLambertMaterial({ color: col('--dune') }));
-  outer.rotation.x = -Math.PI / 2; outer.position.set(lv.w / 2, -0.03, lv.h / 2);
+  // Земля рисуется первой и не пишет глубину: контур вещей, стоящих на песке, уходит оболочкой чуть ниже земли — иначе
+  // у ближнего к камере края его не видно (под землёй ничего больше нет, прятать нечего).
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(lv.w, lv.h), toon({ map: tex, depthWrite: false }));
+  plane.rotation.x = -Math.PI / 2; plane.position.set(lv.w / 2, 0, lv.h / 2); plane.renderOrder = -1;
+  const outer = new THREE.Mesh(new THREE.PlaneGeometry(lv.w + VIEW.OUTER * 2, lv.h + VIEW.OUTER * 2), toon({ color: col('--dune'), depthWrite: false }));
+  outer.rotation.x = -Math.PI / 2; outer.position.set(lv.w / 2, -0.03, lv.h / 2); outer.renderOrder = -2;
   World.groundTex = tex; World.gctx = ctx; World.ground = plane;
   return [outer, plane];
 }
@@ -789,64 +1173,86 @@ function bedShape(b, grow){
 // горшок → лунка с камушками → грядка с рядками → клумба с бордюром → огород с заборчиком; ландмарк — оазис.
 const CLASS_NAMES = ['горшки', 'лунки', 'грядки', 'клумбы', 'огороды', 'поля', 'рощи'];
 function bedKind(b, landmark){
-  if (landmark) return 'oasis';
+  if (landmark) return b.kind === 'bigtree' ? 'bigtree' : 'oasis';
   if (b.kind) return b.kind;   // уровень-место задаёт вид сам: деревья сада, клумбы площади и дворов
   if (b.gate >= 0) return b.R < 2.2 ? 'flowerbed' : b.R < 3.6 ? 'garden' : b.R < 5.5 ? 'field' : 'grove';   // веха — знакомая вещь своего размера
   if (b.shape === 'rect') return 'row';
   if (b.cls === 0) return b.R < 0.72 ? 'pot' : 'mound';
   return ['mound', 'mound', 'flowerbed', 'flowerbed', 'garden', 'field', 'grove'][b.cls];
 }
-const KIND_NAMES = { pot: 'Горшок', mound: 'Лунка', row: 'Грядка', flowerbed: 'Клумба', garden: 'Огород', field: 'Поле', grove: 'Роща', tree: 'Дерево', oasis: 'Оазис' };
-const KIND_GEN = { pot: 'горшка', mound: 'лунки', row: 'грядки', flowerbed: 'клумбы', garden: 'огорода', field: 'поля', grove: 'рощи', tree: 'дерева', oasis: 'оазиса' };
+const KIND_NAMES = { pot: 'Горшок', mound: 'Лунка', row: 'Грядка', flowerbed: 'Клумба', garden: 'Огород', field: 'Поле', grove: 'Роща', tree: 'Дерево', oasis: 'Оазис',
+  sprout: 'Росток', bush: 'Куст', bigtree: 'Великое дерево' };
+const KIND_GEN = { pot: 'горшка', mound: 'лунки', row: 'грядки', flowerbed: 'клумбы', garden: 'огорода', field: 'поля', grove: 'рощи', tree: 'дерева', oasis: 'оазиса',
+  sprout: 'ростка', bush: 'куста', bigtree: 'великого дерева' };
 const BED_GEO = {};   // общие геометрии видов, масштаб — на меше
 function bedGeo(name, make){ return BED_GEO[name] || (BED_GEO[name] = make()); }
 
+const SPROUT_MAT = toon({ color: 0xffffff });   // ростку нечего красить: общий материал-заглушка (сухой кустик и цветок — пулы эффектов)
 function buildBed(b, landmark, decor){
   const g = new THREE.Group(), kind = bedKind(b, landmark);
   g.position.set(b.x, 0, b.y); g.rotation.y = -b.rot;
+  if (kind === 'sprout'){
+    const c = SPROUT_MAT.color; g.userData = { bed: b, kind, soilMat: SPROUT_MAT, rimMat: SPROUT_MAT, rimBase: c, rimBloom: c, rimFar: c, top: 0.02 }; return g;
+  }
+  if (kind === 'bush'){   // куст: сухой шар веток; поливают — зеленеет и раздувается, на расцвете сверху цветы
+    const leafMat = toon({ color: col('--crown-dry') }), blob = bedGeo('blob', () => new THREE.IcosahedronGeometry(1, 1));
+    const crown = new THREE.Group(), leaves = new THREE.Mesh(bedGeo('bush', () => mergeGeo([[0, 0.5, 0, 0.62], [-0.45, 0.36, 0.1, 0.48], [0.45, 0.34, -0.08, 0.5], [0.05, 0.38, 0.45, 0.46], [0, 0.4, -0.44, 0.46]]
+      .map(([x, y, z, r]) => [blob, [x, y, z], r]))), leafMat);
+    leaves.scale.setScalar(b.R); outline(leaves, outTh(b.R) * 1.3, false); crown.add(leaves); crown.scale.setScalar(0.6); g.add(crown);
+    decor.blobs.push({ x: b.x, z: b.y, rx: b.R * 1.15, h: b.R * 0.6 });
+    const c = SPROUT_MAT.color;
+    g.userData = { bed: b, kind, soilMat: SPROUT_MAT, rimMat: SPROUT_MAT, rimBase: c, rimBloom: c, rimFar: c, top: b.R * 1.02, leafMat, crowns: [crown], fruits: [] };
+    return g;
+  }
   const seg = b.shape === 'rect' ? 3 : Math.round(Math.min(36, 12 + 3 * b.R));   // сегменты по размеру: мелочь не тратит треугольники
   const ext = (shape, depth) => { const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelSize: 0.06, bevelThickness: 0.05, bevelSegments: 1, curveSegments: seg });
     geo.rotateX(-Math.PI / 2); return geo; };
-  const soilMat = new THREE.MeshLambertMaterial({ color: col('--soil-dry') });
+  const soilMat = toon({ color: col('--soil-dry') });
   let rimMat, rimBase, rimBloom, top = 0.16;
   const ud = { bed: b, kind, soilMat };
   if (kind === 'pot'){
     const h = 0.35 + 0.45 * b.R; top = h;
-    rimBase = col('--pot-lip'); rimBloom = col('--pot-lip'); rimMat = new THREE.MeshLambertMaterial({ color: rimBase });
-    const body = new THREE.Mesh(bedGeo('pot', () => { const q = new THREE.CylinderGeometry(1, 0.74, 1, 22); q.translate(0, 0.5, 0); return q; }), new THREE.MeshLambertMaterial({ color: pal('--pot') }));
-    body.scale.set(b.R * 0.96, h, b.R * 0.96);
+    rimBase = col('--pot-lip'); rimBloom = col('--pot-lip'); rimMat = toon({ color: rimBase });
+    const body = new THREE.Mesh(bedGeo('pot', () => { const q = new THREE.CylinderGeometry(1, 0.74, 1, 22); q.translate(0, 0.5, 0); return q; }), toon({ color: pal('--pot') }));
+    body.scale.set(b.R * 0.96, h, b.R * 0.96); outline(body, outTh(Math.max(0.6, b.R)) * 1.3);   // горшок — вещь, а не лунка: контур жирнее
+    decor.blobs.push({ x: b.x, z: b.y, rx: b.R * 1.25, h });
     const lip = new THREE.Mesh(bedGeo('lip', () => { const q = new THREE.TorusGeometry(1, 0.09, 8, 28); q.rotateX(Math.PI / 2); return q; }), rimMat);
-    lip.scale.set(b.R * 0.96, b.R, b.R * 0.96); lip.position.y = h;
+    lip.scale.set(b.R * 0.96, b.R, b.R * 0.96); lip.position.y = h; outline(lip, outTh(Math.max(0.6, b.R)), false);
     const soil = new THREE.Mesh(bedGeo('disc', () => { const q = new THREE.CircleGeometry(1, 28); q.rotateX(-Math.PI / 2); return q; }), soilMat);
     soil.scale.setScalar(b.R * 0.86); soil.position.y = h - 0.03;
     g.add(body, lip, soil);
   } else {
     const wooden = kind === 'row' || kind === 'field', rimColor = wooden ? '--wood' : kind === 'oasis' ? '--sand-dark' : '--soil-rim';
     rimBase = col(rimColor); rimBloom = wooden ? col('--wood') : col('--grass-dark');
-    rimMat = new THREE.MeshLambertMaterial({ color: rimBase });
-    const rim = new THREE.Mesh(ext(bedShape(b, 1.0), wooden ? 0.16 : 0.1), rimMat);
+    rimMat = toon({ color: rimBase });
+    const rim = new THREE.Mesh(ext(bedShape(b, 1.0), wooden ? 0.16 : 0.1), rimMat); outline(rim, outTh(b.R));
     const pad = wooden ? Math.min(0.22, Math.min(b.rx, b.ry) * 0.22) : Math.min(0.16, Math.min(b.rx, b.ry) * 0.16);
     const soil = new THREE.Mesh(ext(bedShape({ ...b, rx: b.rx - pad, ry: b.ry - pad }, 1), 0.12), soilMat);
     soil.position.y = 0.04; g.add(rim, soil);
     const c = Math.cos(b.rot), s = Math.sin(b.rot), W = (u, v) => ({ x: b.x + u * c - v * s, z: b.y + u * s + v * c });
-    if (kind === 'mound' || kind === 'tree' || kind === 'grove'){    // камушки по кромке
+    if (kind === 'mound' || kind === 'tree' || kind === 'grove' || kind === 'bigtree'){    // камушки по кромке
       const n = Math.max(7, Math.round(2 * Math.PI * b.R / 0.42));
       for (let k = 0; k < n; k++){ const a = k / n * Math.PI * 2; decor.stones.push({ ...W(Math.cos(a) * b.rx * 1.02, Math.sin(a) * b.ry * 1.02), s: 0.8 + ((k * 37) % 7) / 14 }); }
     }
-    if (kind === 'tree'){                        // лунка сада: ствол и сухая крона; полил — крона зеленеет и раздувается, висят плоды
-      const H = 0.8 + 0.3 * b.R, leafMat = new THREE.MeshLambertMaterial({ color: col('--crown-dry') }), fruitMat = new THREE.MeshLambertMaterial({ color: pal('--fruit') });
-      const tr = new THREE.Mesh(bedGeo('trunk', () => { const q = new THREE.CylinderGeometry(0.1, 0.17, 1, 7); q.translate(0, 0.5, 0); return q; }), new THREE.MeshLambertMaterial({ color: pal('--trunk') }));
-      tr.scale.set(1.2, H, 1.2); tr.position.y = 0.12;
+    if (kind === 'tree' || kind === 'bigtree'){  // лунка сада: ствол и сухая крона; полил — крона зеленеет и раздувается, висят плоды
+      const big = kind === 'bigtree';             // великое дерево — та же вещь в масштабе холма: толстый ствол, крона на полнеба
+      const H = big ? 0.85 * b.R : 0.8 + 0.3 * b.R, leafMat = toon({ color: col('--crown-dry') }), fruitMat = toon({ color: pal('--fruit') });
+      const tr = new THREE.Mesh(bedGeo('trunk', () => { const q = new THREE.CylinderGeometry(0.1, 0.17, 1, 7); q.translate(0, 0.5, 0); return q; }), toon({ color: pal('--trunk') }));
+      const tw = big ? 0.42 * b.R : 1.2; tr.scale.set(tw, H, tw); tr.position.y = 0.12; outline(tr, outTh(b.R) * 0.7);
+      decor.blobs.push({ x: b.x, z: b.y, y: 0.23, rx: b.R * 0.8, h: H + 0.5 * b.R });   // на почве лунки
       const crown = new THREE.Group(); crown.position.y = H + 0.12; const fruits = [];
       const blob = bedGeo('blob', () => new THREE.IcosahedronGeometry(1, 1)), fruit = bedGeo('fruit', () => new THREE.SphereGeometry(1, 8, 6));
-      for (const [x, y, z, r] of [[0, 0.35, 0, 0.62], [-0.38, 0.12, 0.12, 0.44], [0.4, 0.1, -0.08, 0.46], [0.05, 0.12, 0.4, 0.42]]){
-        const m = new THREE.Mesh(blob, leafMat); m.position.set(x * b.R * 0.55, y * b.R * 0.55, z * b.R * 0.55); m.scale.setScalar(r * b.R * 0.55); crown.add(m); }
-      for (let k = 0; k < 7; k++){ const a = k / 7 * Math.PI * 2 + 0.4, f = new THREE.Mesh(fruit, fruitMat);
-        f.position.set(Math.cos(a) * b.R * 0.36, 0.05 + (k % 2) * 0.14 * b.R, Math.sin(a) * b.R * 0.36 + 0.12); f.scale.setScalar(0); f.userData.s = 0.07 + 0.025 * b.R; crown.add(f); fruits.push(f); }
+      const lush = !!(G.S && G.S.water);   // спайк: дерево — сама вещь, а не лунка с деревцем: крона на всю лунку, у великого — шире холма
+      const k = b.R * (big ? 1.05 : lush ? 0.78 : 0.55), leaves = new THREE.Mesh(mergeGeo([[0, 0.35, 0, 0.62], [-0.38, 0.12, 0.12, 0.44], [0.4, 0.1, -0.08, 0.46], [0.05, 0.12, 0.4, 0.42]]
+        .map(([x, y, z, r]) => [blob, [x * k, y * k, z * k], r * k])), leafMat);
+      outline(leaves, outTh(b.R), false); crown.add(leaves);
+      const nf = big ? 16 : 7, fr = big ? 0.55 : 0.36;
+      for (let k = 0; k < nf; k++){ const a = k / nf * Math.PI * 2 + 0.4, f = new THREE.Mesh(fruit, fruitMat);
+        f.position.set(Math.cos(a) * b.R * fr, 0.05 + (k % 2) * 0.14 * b.R, Math.sin(a) * b.R * fr + 0.12); f.scale.setScalar(0); f.userData.s = big ? 0.06 * b.R : 0.07 + 0.025 * b.R; crown.add(f); fruits.push(f); }
       crown.scale.setScalar(0.6); g.add(tr, crown);
       Object.assign(ud, { leafMat, crowns: [crown], fruits });
     } else if (kind === 'field'){                // поле: деревянный бортик, рядки вдоль длинной оси, по хорде овала
-      const ry = b.ry - pad, rows = Math.max(3, Math.round(ry * 2 / 0.55)), ridgeMat = new THREE.MeshLambertMaterial({ color: pal('--soil-rim') });
+      const ry = b.ry - pad, rows = Math.max(3, Math.round(ry * 2 / 0.55)), ridgeMat = toon({ color: pal('--soil-rim') });
       for (let k = 0; k < rows; k++){
         const v = -ry + (k + 0.5) * (2 * ry / rows), len = b.shape === 'rect' ? (b.rx - pad) * 2 : 2 * (b.rx - pad) * Math.sqrt(Math.max(0, 1 - (v / ry) ** 2));
         const rg = new THREE.Mesh(bedGeo('ridge', () => new THREE.BoxGeometry(1, 0.07, 0.1)), ridgeMat);
@@ -854,19 +1260,21 @@ function buildBed(b, landmark, decor){
       }
       ud.rows = rows;
     } else if (kind === 'grove'){                // роща: несколько деревьев с сухими кронами
-      const leafMat = new THREE.MeshLambertMaterial({ color: col('--crown-dry') }), crowns = [], trunkMat = new THREE.MeshLambertMaterial({ color: pal('--trunk') });
+      const leafMat = toon({ color: col('--crown-dry') }), crowns = [], trunkMat = toon({ color: pal('--trunk') });
       const blob = bedGeo('blob', () => new THREE.IcosahedronGeometry(1, 1)), n = Math.max(3, Math.round(b.area / 9));
       for (let k = 0; k < n; k++){
         const a = k / n * Math.PI * 2 + 0.5, rr = k === 0 ? 0 : 0.55, u = Math.cos(a) * rr * b.rx, v = Math.sin(a) * rr * b.ry, H = 1.2 + 0.18 * b.R;
         const tr = new THREE.Mesh(bedGeo('trunk', () => { const q = new THREE.CylinderGeometry(0.1, 0.17, 1, 7); q.translate(0, 0.5, 0); return q; }), trunkMat);
-        tr.scale.set(1.6, H, 1.6); tr.position.set(u, 0.12, v); g.add(tr);
+        tr.scale.set(1.6, H, 1.6); tr.position.set(u, 0.12, v); outline(tr, outTh(b.R) * 0.6); g.add(tr);
+        decor.blobs.push({ ...W(u, v), y: 0.23, rx: 1.3, h: H + 1 });
         const cr = new THREE.Group(); cr.position.set(u, H + 0.12, v);
-        for (const [x, y, z, r] of [[0, 0.3, 0, 0.6], [-0.4, 0.1, 0.1, 0.45], [0.4, 0.1, -0.1, 0.45]]){ const m = new THREE.Mesh(blob, leafMat); m.position.set(x * 1.4, y * 1.4, z * 1.4); m.scale.setScalar(r * 1.5); cr.add(m); }
+        const leaves = new THREE.Mesh(bedGeo('grove-crown', () => mergeGeo([[0, 0.3, 0, 0.6], [-0.4, 0.1, 0.1, 0.45], [0.4, 0.1, -0.1, 0.45]].map(([x, y, z, r]) => [blob, [x * 1.4, y * 1.4, z * 1.4], r * 1.5]))), leafMat);
+        outline(leaves, outTh(b.R) * 0.8, false); cr.add(leaves);
         cr.scale.setScalar(0.6); g.add(cr); crowns.push(cr);
       }
       Object.assign(ud, { leafMat, crowns, fruits: [] });
     } else if (kind === 'row'){                  // рядки вдоль длинной стороны
-      const rows = Math.max(2, Math.round((b.ry - pad) * 2 / 0.42)), ridgeMat = new THREE.MeshLambertMaterial({ color: pal('--soil-rim') });
+      const rows = Math.max(2, Math.round((b.ry - pad) * 2 / 0.42)), ridgeMat = toon({ color: pal('--soil-rim') });
       for (let k = 0; k < rows; k++){
         const v = -(b.ry - pad) + (k + 0.5) * (2 * (b.ry - pad) / rows);
         const rg = new THREE.Mesh(bedGeo('ridge', () => new THREE.BoxGeometry(1, 0.07, 0.1)), ridgeMat);
@@ -874,8 +1282,8 @@ function buildBed(b, landmark, decor){
       }
       ud.rows = rows;
     } else if (kind === 'flowerbed'){            // каменный бордюр
-      const curb = new THREE.Mesh(bedGeo('curb', () => { const q = new THREE.TorusGeometry(1, 0.06, 5, 40); q.rotateX(Math.PI / 2); return q; }), new THREE.MeshLambertMaterial({ color: pal('--curb') }));
-      curb.scale.set(b.rx, 1.6, b.ry); curb.position.y = 0.16; g.add(curb);
+      const curb = new THREE.Mesh(bedGeo('curb', () => { const q = new THREE.TorusGeometry(1, 0.06, 5, 40); q.rotateX(Math.PI / 2); return q; }), toon({ color: pal('--curb') }));
+      curb.scale.set(b.rx, 1.6, b.ry); curb.position.y = 0.16; outline(curb, outTh(b.R), false); g.add(curb);   // бордюр шире бортика — обведён он
     } else if (kind === 'garden' && b.shape === 'rect'){   // огород-прямоугольник: штакетник по периметру
       const ax = b.rx + 0.18, ay = b.ry + 0.18, per = [[-ax, -ay, ax, -ay], [ax, -ay, ax, ay], [ax, ay, -ax, ay], [-ax, ay, -ax, -ay]];
       for (const [u0, v0, u1, v1] of per){ const n = Math.max(2, Math.round(Math.hypot(u1 - u0, v1 - v0) / 0.5));
@@ -884,29 +1292,29 @@ function buildBed(b, landmark, decor){
       const n = Math.round(2 * Math.PI * b.R / 0.55);
       for (let k = 0; k < n; k++){ const a = k / n * Math.PI * 2; decor.pickets.push({ ...W(Math.cos(a) * b.rx * 1.05, Math.sin(a) * b.ry * 1.05), rot: -b.rot - a }); }
     } else if (kind === 'oasis'){                // пруд и пальмы
-      const pondMat = new THREE.MeshLambertMaterial({ color: col('--pond-dry') });
+      const pondMat = toon({ color: col('--pond-dry') });
       const pond = new THREE.Mesh(bedGeo('disc', () => { const q = new THREE.CircleGeometry(1, 28); q.rotateX(-Math.PI / 2); return q; }), pondMat);
       pond.scale.set(b.rx * 0.42, 1, b.ry * 0.42); pond.position.y = 0.2; g.add(pond);
-      const trunkMat = new THREE.MeshLambertMaterial({ color: pal('--trunk') }), leafMat = new THREE.MeshLambertMaterial({ color: col('--palm-dry') });
-      const palms = [];
+      const trunkMat = toon({ color: pal('--trunk') }), leafMat = toon({ color: col('--palm-dry') });
+      const palms = []; let fronds = null;   // листья одной геометрией на все четыре пальмы
       for (let k = 0; k < 4; k++){
         const a = k / 4 * Math.PI * 2 + 0.6, H = 1.6 + 0.3 * b.R, p = new THREE.Group();
         p.position.set(Math.cos(a) * b.rx * 0.62, 0.16, Math.sin(a) * b.ry * 0.62); p.rotation.z = 0.12 * Math.cos(a); p.rotation.x = 0.12 * Math.sin(a);
         const tr = new THREE.Mesh(bedGeo('trunk', () => { const q = new THREE.CylinderGeometry(0.1, 0.17, 1, 7); q.translate(0, 0.5, 0); return q; }), trunkMat);
-        tr.scale.set(1 + b.R * 0.05, H, 1 + b.R * 0.05); p.add(tr);
+        tr.scale.set(1 + b.R * 0.05, H, 1 + b.R * 0.05); outline(tr, outTh(b.R) * 0.5); p.add(tr);
+        decor.blobs.push({ ...W(Math.cos(a) * b.rx * 0.62, Math.sin(a) * b.ry * 0.62), y: 0.23, rx: 1.1 + 0.12 * b.R, h: H });
         const crown = new THREE.Group(); crown.position.y = H;
-        for (let j = 0; j < 6; j++){
-          const lf = new THREE.Mesh(bedGeo('frond', () => { const q = new THREE.SphereGeometry(1, 8, 4); q.scale(0.5, 0.06, 0.16); q.translate(0.5, 0, 0); return q; }), leafMat);
-          lf.scale.setScalar(1.2 + 0.12 * b.R); lf.rotation.y = j / 6 * Math.PI * 2; lf.rotation.z = -0.35; crown.add(lf);
-        }
+        const frond = bedGeo('frond', () => { const q = new THREE.SphereGeometry(1, 8, 4); q.scale(0.5, 0.06, 0.16); q.translate(0.5, 0, 0); return q; });
+        fronds = fronds || mergeGeo(Array.from({ length: 6 }, (_, j) => [frond, [0, 0, 0], 1.2 + 0.12 * b.R, [0, j / 6 * Math.PI * 2, -0.35]]));
+        const lf = new THREE.Mesh(fronds, leafMat); outline(lf, outTh(b.R) * 0.5, false); crown.add(lf);
         crown.scale.setScalar(0.7); p.add(crown); g.add(p); palms.push(crown);
       }
       Object.assign(ud, { pondMat, palms, leafMat });
     }
   }
   if (b.gate >= 0){   // веха: флажок на шесте у края — «вот это следующая цель»; дорос — золотой и машет, полил — зелёный
-    const H = 1.3 + 0.22 * b.R, pole = new THREE.Mesh(bedGeo('pole', () => { const q = new THREE.CylinderGeometry(0.05, 0.06, 1, 6); q.translate(0, 0.5, 0); return q; }), new THREE.MeshLambertMaterial({ color: pal('--wood') }));
-    const fx = b.rx + 0.35, flagMat = new THREE.MeshLambertMaterial({ color: pal('--accent'), side: THREE.DoubleSide });
+    const H = 1.3 + 0.22 * b.R, pole = new THREE.Mesh(bedGeo('pole', () => { const q = new THREE.CylinderGeometry(0.05, 0.06, 1, 6); q.translate(0, 0.5, 0); return q; }), toon({ color: pal('--wood') }));
+    const fx = b.rx + 0.35, flagMat = toon({ color: pal('--accent'), side: THREE.DoubleSide });
     pole.scale.set(1, H, 1); pole.position.set(fx, 0, 0);
     const flag = new THREE.Mesh(bedGeo('flag', () => { const q = new THREE.PlaneGeometry(1, 0.62, 6, 1); q.translate(0.5, 0, 0); return q; }), flagMat);
     const fs = 0.55 + 0.06 * b.R; flag.scale.set(fs, fs, fs); flag.position.set(fx, H - 0.3 * fs, 0);
@@ -920,9 +1328,9 @@ function buildBed(b, landmark, decor){
 // Колодец в центре кучки: каменное кольцо и вода. Не грядка — просто ориентир «здесь горсть».
 function buildWell(k){
   const g = new THREE.Group(); g.position.set(k.x, 0, k.y);
-  const ring = new THREE.Mesh(bedGeo('well', () => { const q = new THREE.TorusGeometry(1, 0.32, 8, 20); q.rotateX(Math.PI / 2); return q; }), new THREE.MeshLambertMaterial({ color: pal('--stone') }));
-  const s = Math.min(0.5, k.R * 0.18); ring.scale.set(s, s * 1.4, s); ring.position.y = 0.18;
-  const water = new THREE.Mesh(bedGeo('disc', () => { const q = new THREE.CircleGeometry(1, 28); q.rotateX(-Math.PI / 2); return q; }), new THREE.MeshLambertMaterial({ color: pal('--water') }));
+  const ring = new THREE.Mesh(bedGeo('well', () => { const q = new THREE.TorusGeometry(1, 0.32, 8, 20); q.rotateX(Math.PI / 2); return q; }), toon({ color: pal('--stone') }));
+  const s = Math.min(0.5, k.R * 0.18); ring.scale.set(s, s * 1.4, s); ring.position.y = 0.18; outline(ring, outTh(1.2), false);
+  const water = new THREE.Mesh(bedGeo('disc', () => { const q = new THREE.CircleGeometry(1, 28); q.rotateX(-Math.PI / 2); return q; }), toon({ color: pal('--water') }));
   water.scale.setScalar(s * 0.75); water.position.y = 0.22;
   g.add(ring, water); return g;
 }
@@ -932,15 +1340,22 @@ function buildWell(k){
 function buildPlaceDecor(lv, decor){
   const d = lv.decor, g = new THREE.Group();
   const box = bedGeo('box', () => { const q = new THREE.BoxGeometry(1, 1, 1); q.translate(0, 0.5, 0); return q; });
-  const adobe = new THREE.MeshLambertMaterial({ color: pal('--adobe') }), roof = new THREE.MeshLambertMaterial({ color: pal('--roof') });
-  const plinth = new THREE.MeshLambertMaterial({ color: pal('--plinth') }), awning = new THREE.MeshLambertMaterial({ color: pal('--pot') });
-  const door = new THREE.MeshLambertMaterial({ color: pal('--door') }), win = new THREE.MeshLambertMaterial({ color: pal('--window') }), wood = new THREE.MeshLambertMaterial({ color: pal('--wood') });
+  const adobe = toon({ color: pal('--adobe') }), roof = toon({ color: pal('--roof') });
+  const plinth = toon({ color: pal('--plinth') }), awning = toon({ color: pal('--pot') });
+  const door = toon({ color: pal('--door') }), win = toon({ color: pal('--window') }), wood = toon({ color: pal('--wood') });
   const part = (mat, sx, sy, sz, x, y, z) => { const m = new THREE.Mesh(box, mat); m.scale.set(sx, sy, sz); m.position.set(x, y, z); return m; };
+  // обведённая деталь — с размером в геометрии: у растянутой масштабом коробки сглаженная нормаль оболочки смотрит
+  // вдоль короткой оси, и вбок контур почти не выходит
+  const solid = (mat, sx, sy, sz, x, y, z) => { const q = box.clone(); q.scale(sx, sy, sz); const m = new THREE.Mesh(q, mat); m.position.set(x, y, z); return m; };
   d.houses.forEach((h, k) => {
     const H = 1.5 + (k % 3) * 0.16, hg = new THREE.Group(), fx = h.door * h.w / 2; hg.position.set(h.x, 0, h.y);
-    hg.add(part(adobe, h.w, H, h.d, 0, 0, 0), part(roof, h.w + 0.22, 0.14, h.d + 0.22, 0, H, 0), part(plinth, h.w + 0.06, 0.28, h.d + 0.06, 0, 0, 0));
+    const th = outTh(Math.max(h.w, h.d) / 2) * 1.7;   // у коробки нормали оболочки по диагонали — вбок в √3 раз тоньше
+    const walls = solid(adobe, h.w, H, h.d, 0, 0, 0), top = solid(roof, h.w + 0.22, 0.14, h.d + 0.22, 0, H, 0), base = solid(plinth, h.w + 0.06, 0.28, h.d + 0.06, 0, 0, 0);
+    outline(walls, th); outline(top, th); outline(base, th); hg.add(walls, top, base);
     const cz = (k % 2 ? -1 : 1) * h.d * 0.2;   // надстройка на крыше — силуэты домов разные
-    hg.add(part(adobe, h.w * 0.42, 0.55, h.d * 0.46, -fx * 0.35, H + 0.14, cz), part(roof, h.w * 0.42 + 0.16, 0.1, h.d * 0.46 + 0.16, -fx * 0.35, H + 0.69, cz));
+    const annex = solid(adobe, h.w * 0.42, 0.55, h.d * 0.46, -fx * 0.35, H + 0.14, cz), annexTop = solid(roof, h.w * 0.42 + 0.16, 0.1, h.d * 0.46 + 0.16, -fx * 0.35, H + 0.69, cz);
+    outline(annex, th * 0.7); outline(annexTop, th * 0.7); hg.add(annex, annexTop);
+    decor.blobs.push({ x: h.x, z: h.y, rx: h.w * 0.72, rz: h.d * 0.72, h: H });
     hg.add(part(door, 0.08, 1.0, 0.7, fx + h.door * 0.02, 0, 0), part(awning, 0.5, 0.06, 1.0, fx + h.door * 0.25, 1.12, 0));   // дверь и козырёк к тропе
     for (const z of [-h.d * 0.33, h.d * 0.33]) hg.add(part(win, 0.08, 0.38, 0.36, fx + h.door * 0.02, 0.72, z));
     hg.add(part(win, 0.46, 0.38, 0.08, 0, 0.72, h.d / 2 + 0.02));   // окно к камере
@@ -955,10 +1370,10 @@ function buildPlaceDecor(lv, decor){
     for (const x of [f.x0, f.x1]) if (x === gateX){ side(x, f.y0, x, gy - 0.8); side(x, gy + 0.8, x, f.y1); } else side(x, f.y0, x, f.y1);
   }
   if (d.rocks.length){
-    const im = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(0.5, 0), new THREE.MeshLambertMaterial({ color: pal('--rock') }), d.rocks.length);
+    const im = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(0.5, 0), toon({ color: pal('--rock') }), d.rocks.length);
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), rnd = mulberry32(23);
     d.rocks.forEach(([x, y, sz], i) => im.setMatrixAt(i, m4.compose(new THREE.Vector3(x, 0.12, y), q.setFromEuler(e.set(0, rnd() * 6, 0)), new THREE.Vector3(sz, sz * 0.55, sz * 0.85))));
-    g.add(im);
+    g.add(im, outlineInst(im, 0.09));
   }
   return g;
 }
@@ -967,7 +1382,7 @@ function buildPlaceDecor(lv, decor){
 function buildDecor(decor){
   const out = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3(), sc = new THREE.Vector3();
   if (decor.stones.length){
-    const im = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.13, 0), new THREE.MeshLambertMaterial({ color: 0xffffff }), decor.stones.length);
+    const im = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.13, 0), toon({ color: 0xffffff }), decor.stones.length);
     const rnd = mulberry32(17), c1 = pal('--stone'), c2 = pal('--curb'), cc = new THREE.Color();
     decor.stones.forEach((st, i) => { p.set(st.x, 0.1, st.z); sc.set(st.s, st.s * 0.7, st.s); q.setFromEuler(e.set(0, rnd() * 6, 0));
       im.setMatrixAt(i, m4.compose(p, q, sc)); im.setColorAt(i, cc.copy(c1).lerp(c2, rnd())); });
@@ -975,9 +1390,9 @@ function buildDecor(decor){
   }
   if (decor.pickets.length){
     const geo = new THREE.BoxGeometry(0.09, 0.55, 0.06); geo.translate(0, 0.275, 0);
-    const im = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ color: pal('--wood') }), decor.pickets.length);
+    const im = new THREE.InstancedMesh(geo, toon({ color: pal('--wood') }), decor.pickets.length);
     decor.pickets.forEach((st, i) => { p.set(st.x, 0, st.z); sc.set(1, 1, 1); q.setFromEuler(e.set(0, st.rot, 0)); im.setMatrixAt(i, m4.compose(p, q, sc)); });
-    out.push(im);
+    out.push(im, outlineInst(im, SH.OUT_PICKET * 1.5));
   }
   return out;
 }
@@ -985,11 +1400,36 @@ function buildDecor(decor){
 // Тучка: пуфы + мордочка (глаза, щёчки, улыбка) на стороне к камере. Радиус пуфов нормирован к 1.
 const CLOUD_PUFFS = [[0, 0.18, 0, 0.62], [-0.55, 0.0, 0.08, 0.46], [0.56, 0.02, 0.05, 0.48], [-0.26, 0.4, -0.14, 0.46],
   [0.3, 0.42, -0.1, 0.43], [0.0, -0.1, 0.28, 0.46], [-0.82, -0.12, -0.1, 0.32], [0.84, -0.1, -0.12, 0.32], [0, 0.05, -0.35, 0.5]];
+// Ступени тучки (спайк «полив-процесс»): с каждой — пуфы гуще, тело темнее; Гроза — искры молний, Муссон — радуга за спиной.
+const STAGE_PUFFS = [[1, -0.96, 0.04, 0.06, 0.42], [1, 0.98, 0.06, 0.02, 0.42], [2, -0.32, 0.64, 0.05, 0.44], [2, 0.36, 0.62, 0, 0.42],
+  [3, -1.3, -0.06, 0, 0.36], [3, 1.32, -0.05, 0, 0.36], [3, 0, -0.18, -0.55, 0.5], [4, 0, 0.9, -0.12, 0.44], [4, -0.74, 0.56, -0.22, 0.4], [4, 0.76, 0.56, -0.22, 0.4]];
+const CLOUD_STAGE_COLORS = [['--cloud', '--cloud-mid', '--cloud-dark'], ['--cloud', '--cl1-mid', '--cl1-dark'], ['--cl2-lit', '--cl2-mid', '--cl2-dark'],
+  ['--cl3-lit', '--cl3-mid', '--cl3-dark'], ['--cl4-lit', '--cl4-mid', '--cl4-dark']];
+function buildBolt(){   // молния: плоский зигзаг высотой 1 (масштаб — высота тучки), жёлтая с чернильным краем
+  const s = new THREE.Shape([[0.05, 1], [0.32, 1], [0.12, 0.62], [0.3, 0.62], [-0.08, 0.18], [0.06, 0.4], [-0.12, 0.4], [0.05, 1]].map(([x, y]) => new THREE.Vector2(x * 1.6, y)));
+  const g = new THREE.Group(), geo = new THREE.ShapeGeometry(s);
+  const ink = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col('--outline'), side: THREE.DoubleSide, depthTest: false, transparent: true }));
+  const fill = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col('--bolt'), side: THREE.DoubleSide, depthTest: false, transparent: true, toneMapped: false }));
+  ink.scale.set(1.35, 1.04, 1); ink.position.y = -0.02; ink.renderOrder = 40; fill.renderOrder = 41; g.add(ink, fill); g.visible = false; return g;
+}
+function setCloudStage(o, k){
+  const u = o.userData; u.stage = k;
+  u.stagePuffs.forEach(m => m.visible = m.userData.stage <= k);
+  const [a, b, c] = CLOUD_STAGE_COLORS[Math.min(k, CLOUD_STAGE_COLORS.length - 1)];
+  u.mat.uniforms.uLit.value.copy(pal(a)); u.mat.uniforms.uMid.value.copy(pal(b)); u.mat.uniforms.uDark.value.copy(pal(c));
+  u.rainbow.visible = k >= 4; u.sparks.visible = k >= 3;
+}
 function buildCloud(){
   const g = new THREE.Group(), body = new THREE.Group();
-  const mat = new THREE.MeshLambertMaterial({ color: col('--cloud'), emissive: col('--cloud-shade'), emissiveIntensity: 0.35, transparent: true, opacity: 1 });   // прозрачна на «вау»
+  const mat = cloudMat();   // прозрачна на «вау»
+  const omat = makeOutlineMat(0.1);   // свой контур: толщина каждый кадр следует за размером тучки (updateView)
   const geo = new THREE.IcosahedronGeometry(1, 3);
-  for (const [x, y, z, r] of CLOUD_PUFFS){ const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.setScalar(r); body.add(m); }
+  for (const [x, y, z, r] of CLOUD_PUFFS){ const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.setScalar(r); outline(m, omat, false); body.add(m); }
+  const stagePuffs = STAGE_PUFFS.map(([k, x, y, z, r]) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.setScalar(r); outline(m, omat, false); m.userData.stage = k; m.visible = false; body.add(m); return m; });
+  const rainbow = new THREE.Group(); rainbow.position.set(0, 0.15, -0.55); rainbow.visible = false;   // Муссон: радуга за спиной
+  RAINBOW_COLORS.forEach((c, k) => { const t = new THREE.Mesh(new THREE.TorusGeometry(1.75 - k * 0.11, 0.06, 6, 40, Math.PI), new THREE.MeshBasicMaterial({ color: col(c), toneMapped: false })); rainbow.add(t); });
+  const sparks = buildBolt(); sparks.scale.set(0.35, 0.55, 1); sparks.position.set(0.3, -0.75, 0.3); sparks.visible = false;   // Гроза: искра молнии под брюхом
+  body.add(rainbow, sparks);
   // мордочка крупная (глаз ~10–14 px на телефоне) и смотрит на камеру; всё непрозрачное — на «вау» тело тает, лицо нет
   const face = new THREE.Group(); face.position.set(0, 0.06, 0.7); face.rotation.x = -0.6;
   const black = new THREE.MeshBasicMaterial({ color: 0x2b2d42 }), white = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -1011,7 +1451,7 @@ function buildCloud(){
   const sweat = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), dropMat); sweat.scale.set(0.8, 1.2, 0.6); sweat.position.set(0.48, 0.26, 0.02); sweat.visible = false; face.add(sweat);
   const tear = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), dropMat); tear.scale.set(0.8, 1.25, 0.6); tear.visible = false; face.add(tear);
   body.add(face); g.add(body);
-  g.userData = { body, face, eyes, balls, happy, brows, cheeks, mouth, mouthO, sweat, tear, mat };
+  g.userData = { body, face, eyes, balls, happy, brows, cheeks, mouth, mouthO, sweat, tear, mat, omat, tint: mat.tint, stagePuffs, rainbow, sparks, stage: 0 };
   return g;
 }
 
@@ -1028,17 +1468,18 @@ function buildLevel(S){
   if (World.root){ scene.remove(World.root); disposeTree(World.root); }
   const root = new THREE.Group(); World.root = root; World.bedMeshes.clear();
   root.add(...buildGround(S.lv, S.li));
-  const landmarkId = S.lv.beds.reduce((m, b) => b.R > m.R ? b : m).id, decor = { stones: [], pickets: [] };
+  const landmarkId = S.lv.beds.reduce((m, b) => b.R > m.R ? b : m).id, decor = { stones: [], pickets: [], blobs: [] };
   for (const b of S.lv.beds){ const m = buildBed(b, b.id === landmarkId, decor); World.bedMeshes.set(b.id, m); root.add(m); }
   if (S.lv.decor) root.add(buildPlaceDecor(S.lv, decor));
   root.add(...buildDecor(decor));
-  for (const k of S.lv.clusters || []) root.add(buildWell(k));   // колодец посреди кучки
+  for (const k of S.lv.clusters || []){ root.add(buildWell(k)); decor.blobs.push({ x: k.x, z: k.y, rx: Math.min(0.5, k.R * 0.18) * 1.6, h: 0.3 }); }   // колодец посреди кучки
+  root.add(buildBlobs(decor.blobs));
   World.cloudObj = buildCloud(); root.add(World.cloudObj);
   [World.shadow, World.rim] = buildShadow(); root.add(World.shadow, World.rim);
   scene.add(root);
   World.cloudVis.r = S.cloud.r;
   World.cam.x = S.cloud.x; World.cam.z = S.cloud.y; World.cam.w = viewW(camStepR(S)); FX.camHoldUntil = 0;
-  G.stageR0 = S.cloud.r; FX.reset(S); Emo.reset(); WinScene.reset(); FX.camSlow = false; sun.intensity = 1.7;
+  G.stageR0 = S.cloud.r; FX.reset(S); Emo.reset(); WinScene.reset(); People.reset(S); FX.camSlow = false; applyTheme(isPlace(S.li) && THEMES[S.li] ? S.li : 'desert');
   updateView(0, true);
   renderer.compile(scene, camera);
   FX.warmup();
@@ -1058,6 +1499,7 @@ function nextGateBed(S){
   return null;
 }
 function camStepR(S){
+  if (S.water) return Math.max(S.cloud.r * 1.25, WATER.STAGES[S.cloud.stage].r * 1.3);   // спайк: обзор от тучки, ступенькой на эволюции
   if (!(S.lv.gates || []).length){ const c = S.cloud.cls; return c + 1 < CFG.CLASS_R.length ? Math.max(classR(c + 1), S.cloud.r * 1.05) : S.cloud.r * 1.25; }
   const g = nextGateBed(S); return Math.max(g ? g.R : S.lv.beds[S.lmId].R, S.cloud.r * 1.05);
 }
@@ -1097,7 +1539,7 @@ function updateView(dt, snap){
   World.cam.x += (t.x - World.cam.x) * k; World.cam.z += (t.z - World.cam.z) * k; World.cam.w += (t.w - World.cam.w) * kw;
   const r = World.cloudVis.r, o = World.cloudObj, u = o.userData;
   o.position.set(S.cloud.x, VIEW.CLOUD_Y0 + VIEW.CLOUD_YK * r + Math.sin(G.vt / 600) * 0.12 * r, S.cloud.y);
-  o.scale.setScalar(r * VIEW.CLOUD_SIZE);
+  o.scale.setScalar(r * VIEW.CLOUD_SIZE); o.userData.omat.th.value = SH.OUT_CLOUD * r * VIEW.CLOUD_SIZE;
   World.shadow.position.x = World.rim.position.x = S.cloud.x; World.shadow.position.z = World.rim.position.z = S.cloud.y;
   World.shadow.scale.set(S.cloud.r, S.cloud.r, 1); const rk = S.cloud.r * (FX.rimK || 1); World.rim.scale.set(rk, rk, 1);
   if (!snap) Emo.update(dt);   // тело и мордочка — поверх положения (при сборке уровня кадра ещё нет)
@@ -1117,7 +1559,7 @@ const FXC = {
   SLOWMO_SCALE: 0.4,     // во столько раз
   PUNCH_MS: 520,         // наезд камеры на большом
   PUNCH: 0.1,            // на столько доля ширины обзора
-  WOW_KINDS: ['row', 'flowerbed', 'garden'],   // за первый расцвет этих видов на уровне — «вау»; горшки и лунки — нет
+  WOW_KINDS: ['row', 'flowerbed', 'garden', 'bush', 'tree', 'grove'],   // за первый расцвет этих видов на уровне — «вау»; горшки, лунки и ростки — нет
   CLOUD_FADE_MS: 520,    // на «вау» тело тучки становится полупрозрачным — расцвет под ней видно
   CRUMB_GAP_MS: 600,     // крошки чаще этого — одна горсть со счётчиком
   HANDFUL_MIN: 4,        // горсть от стольких крошек лопается аккордом
@@ -1166,60 +1608,68 @@ const FX = {
     this.rnd = mulberry32(999 + seedOf(S.li)); const rnd = this.rnd;
     this.beds.clear(); this.petals = []; this.flies = []; this.drops = []; this.splashes = []; this.floaters = []; this.greens = [];
     this.trauma = 0; this.camOverride = null; this.stormOn = false; this.flashUntil = 0; this.pulseAt = -1e9; this.rainK = 1; this.rainBurstUntil = 0;
-    const flowers = [], tufts = [];
+    const flowers = [], tufts = []; let dryN = 0;
     for (const b of S.lv.beds){
-      const size = 0.9 + 0.38 * b.cls, thin = Math.min(1, FXC.FLOWER_THIN / (size * size));   // крупный цветок закрывает больше — их меньше
-      const n = Math.max(FXC.FLOWER_MIN, Math.round(b.area * FXC.FLOWER_DENSITY * thin)), c = Math.cos(b.rot), s = Math.sin(b.rot);
-      const list = [], bud = World.bedMeshes.get(b.id).userData, y0 = bud.top;
+      const bud = World.bedMeshes.get(b.id).userData, sprout = bud.kind === 'sprout';
+      const size = sprout ? 1.3 : 0.9 + 0.38 * b.cls, thin = Math.min(1, FXC.FLOWER_THIN / (size * size));   // крупный цветок закрывает больше — их меньше
+      const n = sprout ? 1 : Math.max(FXC.FLOWER_MIN, Math.round(b.area * FXC.FLOWER_DENSITY * thin)), c = Math.cos(b.rot), s = Math.sin(b.rot);
+      const list = [], y0 = bud.top;
       for (let k = 0, tries = 0; k < n && tries < n * 20; tries++){
         let u = (rnd() * 2 - 1) * b.rx * 0.86, v = (rnd() * 2 - 1) * b.ry * 0.86;
-        if (bud.kind === 'pot'){ u *= 0.8; v *= 0.8; }
+        if (bud.kind === 'pot'){ u *= 0.8; v *= 0.8; } else if (bud.kind === 'bush'){ u *= 0.55; v *= 0.55; } else if (sprout){ u *= 0.3; v *= 0.3; }
         if (b.shape !== 'rect' && (u / b.rx) ** 2 + (v / b.ry) ** 2 > 0.74) continue;
         if (bud.kind === 'row' || bud.kind === 'field'){ const step = 2 * b.ry * 0.86 / bud.rows; v = -b.ry * 0.86 + (Math.floor((v + b.ry * 0.86) / step) + 0.5) * step; }   // цветы рядками
         const d = Math.hypot(u / b.rx, v / b.ry);
-        if ((bud.kind === 'oasis' && d < 0.52) || (bud.kind === 'tree' && d < 0.3)) continue;   // в пруду и в стволе не растут
+        if ((bud.kind === 'oasis' && d < 0.52) || ((bud.kind === 'tree' || bud.kind === 'bigtree') && d < 0.3)) continue;   // в пруду и в стволе не растут
         list.push(flowers.length);
         flowers.push({ bed: b.id, y0, x: b.x + u * c - v * s, z: b.y + u * s + v * c, d, h: (0.42 + rnd() * 0.3) * size, hs: (1.35 + rnd() * 0.6) * size,
           type: rnd() < 0.5 ? 0 : 1, color: FLOWER_COLORS[Math.floor(rnd() * FLOWER_COLORS.length)], tilt: (rnd() - 0.5) * 0.5, yaw: rnd() * 6.28, leaf: rnd() * 6.28 });
         k++;
       }
-      const tl = [], nt = Math.round(b.area * FXC.TUFTS_PER_AREA * thin) + 6;
+      const tl = [], nt = sprout ? 1 : Math.round(b.area * FXC.TUFTS_PER_AREA * thin) + 6;
       for (let k = 0; k < nt; k++){
         const a = rnd() * Math.PI * 2, rr = b.R * (1.08 + rnd() * 0.75);
         tl.push(tufts.length); tufts.push({ bed: b.id, x: b.x + Math.cos(a) * rr, z: b.y + Math.sin(a) * rr, d: (rr / b.R - 1), h: 0.6 + rnd() * 0.7 + 0.2 * b.cls, yaw: rnd() * 6.28 });
       }
-      this.beds.set(b.id, { flowers: list, tufts: tl, bloomAt: -1, done: false, bumpAt: -1e9, tooBigAt: -1e9, hintAt: -1e9, logged: false });
+      this.beds.set(b.id, { flowers: list, tufts: tl, bloomAt: -1, done: false, bumpAt: -1e9, tooBigAt: -1e9, hintAt: -1e9, logged: false, dry: sprout ? dryN++ : -1 });
     }
     this.flowers = flowers; this.tuftList = tufts;
     this.landmarkId = S.lmId; this.lastTier = null; this.lastWow = false; this.punchAt = -1e9; this.fadeUntil = 0;
     this.seenKinds = new Set(); this.crumb = { n: 0, last: -1e9 }; this.slot = null; this.spring = null; this.springDur = 0; this.readyAt = -1; this.need = null;
     const m = this.mats = {
-      stem: new THREE.MeshLambertMaterial({ color: pal('--leaf') }),
-      head: new THREE.MeshLambertMaterial({ color: 0xffffff }),
-      core: new THREE.MeshLambertMaterial({ color: pal('--fl2') }),
-      tuft: new THREE.MeshLambertMaterial({ color: pal('--grass') }),
+      stem: toon({ color: pal('--leaf') }),
+      head: toon({ color: 0xffffff }),
+      core: toon({ color: pal('--fl2') }),
+      tuft: toon({ color: pal('--grass') }),
       petal: new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
-      drop: new THREE.MeshBasicMaterial({ color: pal('--rain'), transparent: true, opacity: 0.85 }),
+      drop: new THREE.MeshBasicMaterial({ color: pal('--rain'), transparent: true, opacity: 0.9 }),
       splash: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, depthWrite: false }),
       wing: new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
       prog: new THREE.MeshBasicMaterial({ color: pal('--rain'), transparent: true, opacity: 0.95, depthWrite: false, depthTest: false, side: THREE.DoubleSide }),
     };
     const stemG = new THREE.CylinderGeometry(0.022, 0.034, 1, 5, 1, true); stemG.translate(0, 0.5, 0);   // без крышек: их не видно
-    const tulipG = new THREE.CylinderGeometry(0.15, 0.06, 0.2, 6); tulipG.translate(0, 0.08, 0);
-    const daisyG = new THREE.IcosahedronGeometry(0.16, 0); daisyG.scale(1, 0.5, 1);
-    const coreG = new THREE.IcosahedronGeometry(0.06, 0);
+    const tulipG = new THREE.CylinderGeometry(0.15, 0.06, 0.2, 7); tulipG.translate(0, 0.08, 0);
+    const daisyG = new THREE.CylinderGeometry(0.17, 0.12, 0.07, 10);   // ромашка — круглая «печенька»: сверху ровный цвет, а не грани самоцвета
+    const coreG = new THREE.IcosahedronGeometry(0.075, 0);
     const leafG = new THREE.OctahedronGeometry(0.1, 0); leafG.scale(1.5, 0.3, 0.6); leafG.translate(0.11, 0, 0);
     const tuftG = new THREE.ConeGeometry(0.13, 1, 4); tuftG.translate(0, 0.5, 0);
-    const nF = flowers.length;
+    const nF = flowers.length; let nT = 0, nD = 0;
+    for (const f of flowers) f.hi = f.type === 0 ? nT++ : nD++;   // головка — в пуле своего вида: без скрытого двойника (с контуром он стоил вдвое)
     this.inst = {
       stem: this.instMesh(stemG, m.stem, nF, 'stems'), leaf: this.instMesh(leafG, m.stem, nF, 'leaves'),
-      tulip: this.instMesh(tulipG, m.head, nF, 'tulips'), daisy: this.instMesh(daisyG, m.head, nF, 'daisies'), core: this.instMesh(coreG, m.core, nF, 'cores'),
+      tulip: this.instMesh(tulipG, m.head, nT, 'tulips'), daisy: this.instMesh(daisyG, m.head, nD, 'daisies'), core: this.instMesh(coreG, m.core, nD, 'cores'),
       tuft: this.instMesh(tuftG, m.tuft, tufts.length, 'tufts'),
       petal: this.instMesh(new THREE.PlaneGeometry(0.16, 0.11), m.petal, FXC.PETALS_MAX, 'petals'),
-      drop: this.instMesh(new THREE.BoxGeometry(0.04, 0.5, 0.04), m.drop, FXC.DROPS_MAX, 'drops'),
+      drop: this.instMesh(bedGeo('drop', () => { const q = new THREE.SphereGeometry(0.055, 7, 5); q.scale(1, 2.8, 1); return q; }), m.drop, FXC.DROPS_MAX, 'drops'),   // капля-слеза, а не волосок
+      dry: this.instMesh(bedGeo('dry', () => { const k = new THREE.ConeGeometry(0.07, 0.42, 4); k.translate(0, 0.21, 0);
+        return mergeGeo([[k, [0, 0, 0], 1, [0, 0, 0]], [k, [0.07, 0, 0.02], [1, 0.8, 1], [0, 0, -0.45]], [k, [-0.07, 0, -0.02], [1, 0.85, 1], [0, 0, 0.45]]]); }), toon({ color: pal('--crown-dry') }), Math.max(1, dryN), 'dry'),
       splash: this.instMesh(new THREE.RingGeometry(0.06, 0.11, 12), m.splash, FXC.SPLASHES_MAX, 'splashes'),
     };
-    flowers.forEach((f, i) => { const cc = col(f.color); this.inst.tulip.setColorAt(i, cc); this.inst.daisy.setColorAt(i, cc); });
+    World.root.add(outlineInst(this.inst.tulip, SH.OUT_FLOWER), outlineInst(this.inst.daisy, SH.OUT_FLOWER), outlineInst(this.inst.dry, 0.02));   // головки цветов и сухие кустики обведены, стебли и трава — нет
+    for (const b of S.lv.beds){ const st = this.beds.get(b.id); if (st.dry >= 0) this.setM(this.inst.dry, st.dry, b.x, 0, b.y, 1.9, 1.6, 1.9, 0, b.x * 7, 0); }   // сухой кустик заметен издалека
+    this.bolt = buildBolt(); World.root.add(this.bolt); this.boltUntil = 0;
+    this.fills = null; if (S.water) this.buildFills(S);
+    flowers.forEach(f => (f.type === 0 ? this.inst.tulip : this.inst.daisy).setColorAt(f.hi, col(f.color)));
     for (let i = 0; i < FXC.PETALS_MAX; i++) this.inst.petal.setColorAt(i, col(FLOWER_COLORS[i % FLOWER_COLORS.length]));
     [this.inst.tulip, this.inst.daisy, this.inst.petal].forEach(x => { if (x.instanceColor) x.instanceColor.needsUpdate = true; });
     for (let i = 0; i < FXC.PETALS_MAX; i++) this.petals.push({ on: false });
@@ -1250,9 +1700,11 @@ const FX = {
     const S = G.S; if (!S) return;
     const x = S.cloud.x, z = S.cloud.y;
     ['stem', 'leaf', 'tulip', 'daisy', 'core', 'tuft', 'petal', 'drop', 'splash'].forEach(k => { this.setM(this.inst[k], 0, x, 0.5, z, 1, 1, 1); this.inst[k].instanceMatrix.needsUpdate = true; });
+    this.bolt.visible = true; this.bolt.position.set(x, 0, z);
     this.flies[0].g.visible = true; this.flies[0].g.position.set(x, 1, z);
     renderer.render(scene, camera);
     ['stem', 'leaf', 'tulip', 'daisy', 'core', 'tuft', 'petal', 'drop', 'splash'].forEach(k => { this.setM(this.inst[k], 0, 0, -50, 0, 0, 0, 0); this.inst[k].instanceMatrix.needsUpdate = true; });
+    this.bolt.visible = false;
     this.flies[0].g.visible = false;
   },
 
@@ -1270,7 +1722,7 @@ const FX = {
     const now = G.vt, cur = this.slot;
     if (cur && now - cur.born < cur.life && cur.prio > prio) return null;
     if (cur) this.floaters = this.floaters.filter(f => f !== cur);
-    const f = Object.assign({ text, prio, follow: true, x: 0, y: 0, z: 0, born: now, life: 1100, color: '#ffffff', size: 30, rise: 1.0, stroke: '#2b2d42' }, opt || {});
+    const f = Object.assign({ text, prio, follow: true, x: 0, y: 0, z: 0, born: now, life: 1100, color: '#ffffff', size: 30, rise: 1.0, stroke: '#2b2140' }, opt || {});
     this.floaters.push(f); this.slot = f; return f;
   },
 
@@ -1278,7 +1730,9 @@ const FX = {
     const S = G.S, now = G.vt;
     if (e.type === 'bloom'){
       const b = S.lv.beds[e.id], st = this.beds.get(e.id);
-      st.bloomAt = now; st.bumpAt = now; st.done = false; st.logged = true;
+      st.bloomAt = now; st.bumpAt = now; st.done = false; st.logged = true; st.took = e.took || 0;
+      if (S.water && st.took >= 0.5 && e.id !== S.lmId)   // спайк: долитое — галочка над вещью: «всё, лети дальше»
+        this.float('✓', b.x, (World.bedMeshes.get(e.id).userData.top || 0.2) + 0.6, b.y, { size: 34, life: 800, rise: 0.9, color: '#ffffff', stroke: '#2f9e44' });
       // сила отклика — от размера грядки относительно тени: крошку почти не замечаешь, большое — событие,
       // «вау» (стоп-кадр, замедление, слово) — только за первый новый вид и за оазис
       const landmark = e.id === S.lmId, kind = bedKind(b, landmark);
@@ -1322,7 +1776,7 @@ const FX = {
     } else if (e.type === 'ready'){
       log('fx.start', 'ready');
       this.readyAt = now;
-      this.say('Оазис ждёт!', 4, { size: 32, life: 1500, color: '#ffffff', stroke: '#58b04a' });
+      this.say(S.water ? finalWake(S) : 'Оазис ждёт!', 4, { size: 32, life: 1500, color: '#ffffff', stroke: '#58b04a' });
     } else if (e.type === 'grow'){
       if (this.lastTier !== 'crumb') this.pulseAt = now;   // от крошек тучка не «вдыхает» — растёт тихо
       log('fx.start', 'grow', 'r=' + e.r.toFixed(2));
@@ -1340,7 +1794,12 @@ const FX = {
       const st = this.beds.get(e.id); st.wetAt = now;
     } else if (e.type === 'capped'){
       log('fx.start', 'capped', 'bed=' + e.id);
-      this.say('Подрасти!', 2, { size: 28, life: 1000, color: '#fff3cf', stroke: '#a87a49' });
+      this.say(S.water ? 'Нужен Муссон!' : 'Подрасти!', 2, { size: 28, life: 1000, color: '#fff3cf', stroke: '#a87a49' });
+    } else if (e.type === 'bolt'){   // Гроза: молния доливает самое крупное под тенью
+      const b = S.lv.beds[e.id], st = this.beds.get(e.id); this.boltAt = now; this.boltTo = b; st.bumpAt = now;
+      this.flashUntil = Math.max(this.flashUntil, now + 160); this.trauma = Math.min(1, this.trauma + 0.18);
+      this.spawnPetals(b, 6, 1); this.greens.push({ x: b.x, y: b.y, R: b.R * 0.9, born: now, last: 0 });
+      log('fx.start', 'bolt', 'bed=' + e.id);
     } else if (e.type === 'storm'){
       log('fx.start', 'storm');
       this.flashUntil = now + 380; this.stormOn = true;
@@ -1371,23 +1830,22 @@ const FX = {
   paintGround(now){
     const ctx = World.gctx, P = VIEW.TEX_PPM, S = G.S; if (!ctx || !S) return;
     for (const g of this.greens){
-      const t = clamp01((now - g.born) / FXC.GREEN_GROW_MS), e = easeOut(t);
-      if (e - g.last < 0.04 && t < 1) continue;
-      g.last = e;
-      const R = g.R * e * P, gr = ctx.createRadialGradient(g.x * P, g.y * P, R * 0.2, g.x * P, g.y * P, R);
-      gr.addColorStop(0, css('--grass')); gr.addColorStop(0.7, css('--grass')); gr.addColorStop(1, 'rgba(134,209,96,0)');
-      ctx.globalAlpha = 0.8; ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(g.x * P, g.y * P, R, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+      const t = clamp01((now - g.born) / FXC.GREEN_GROW_MS), e = easeOut(t), step = g.step || 0;
+      if (step >= GREEN_STEPS.length || e < GREEN_STEPS[step]) continue;
+      g.step = step + 1; paintGreen(ctx, g, GREEN_STEPS[step], step === GREEN_STEPS.length - 1);
       this.texDirty = true;
-      if (t >= 1){ g.done = true; log('fx.end', 'green'); }
+      if (g.step >= GREEN_STEPS.length){ g.done = true; log('fx.end', 'green'); }
     }
     this.greens = this.greens.filter(g => !g.done);
     if (G.screen === 'playing' && !S.over && now - this.lastTrail > FXC.TRAIL_EVERY_MS){
       this.lastTrail = now;
       const c = S.cloud, R = c.r * 0.88 * P;
       ctx.globalAlpha = 0.07; ctx.fillStyle = css('--wet'); ctx.beginPath(); ctx.arc(c.x * P, c.y * P, R, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.5; ctx.fillStyle = css('--grass');
+      ctx.globalAlpha = 0.35; ctx.fillStyle = css(this.rnd() < 0.5 ? '--grass' : '--grass-light');
       const rnd = this.rnd;
       for (let k = 0; k < 3 + c.r * 2; k++){ const a = rnd() * 6.28, rr = Math.sqrt(rnd()) * R; ctx.fillRect(c.x * P + Math.cos(a) * rr, c.y * P + Math.sin(a) * rr, 1.5, 2.5); }
+      if ((c.stage || 0) >= 2){ ctx.globalAlpha = 0.22; ctx.fillStyle = css('--water');   // с Ливня под тучкой остаются лужи
+        for (let k = 0; k < 2; k++){ const a = rnd() * 6.28, rr = Math.sqrt(rnd()) * R * 0.8; ctx.beginPath(); ctx.ellipse(c.x * P + Math.cos(a) * rr, c.y * P + Math.sin(a) * rr, (0.4 + rnd() * 0.5) * P, (0.25 + rnd() * 0.3) * P, rnd() * 3, 0, Math.PI * 2); ctx.fill(); } }
       ctx.globalAlpha = 1; this.texDirty = true;
     }
     if (this.texDirty && now - this.lastTex > FXC.TEX_EVERY_MS){ this.lastTex = now; this.texDirty = false; World.groundTex.needsUpdate = true; }
@@ -1424,21 +1882,24 @@ const FX = {
       }
       // спайк «полив больших»: недоросшая тень поливает — земля темнеет, лезут закрытые бутоны; на пределе бутоны пульсируют
       if (!S.bloomed[id] && S.wet[id] > 0){
-        const w = S.wet[id], capped = S.struggle === 'cap' && w >= CFG.STRUGGLE_CAP - 1e-6, pulse = capped ? 1 + 0.1 * Math.sin(now / 130) : 1;
+        const w = S.wet[id], capped = (S.struggle === 'cap' && w >= CFG.STRUGGLE_CAP - 1e-6) || (S.water && id === S.lmId && !S.ready && w >= WATER.FINAL_CAP - 1e-6);
+        const pulse = capped ? 1 + 0.1 * Math.sin(now / 130) : 1, drinking = now - (st.wetAt || -1e9) < 260;   // пьёт прямо сейчас — крона «глотает»
         ud.soilMat.color.copy(pal('--soil-dry')).lerp(pal('--soil-wet'), 0.85 * w);
+        if (ud.crowns){ const gulp = drinking ? 1 + 0.04 * Math.sin(now / 55) : 1;
+          ud.leafMat.color.copy(pal('--crown-dry')).lerp(pal('--grass-dark'), 0.75 * w); ud.crowns.forEach(c => c.scale.setScalar((0.6 + 0.28 * w) * gulp * pulse)); }
         if (Math.abs(w - (st.wetShown || 0)) > 0.02 || capped){
           st.wetShown = w;
           for (const i of st.flowers){
             const f = this.flowers[i], sc = (0.25 + 0.5 * w) * pulse, h = Math.max(0.001, f.h * 0.55 * w);
             this.setM(I.stem, i, f.x, f.y0, f.z, sc, h, sc);
-            this.setM(I.tulip, i, f.x, f.y0 + h, f.z, f.hs * 0.35 * w * pulse, f.hs * 0.5 * w * pulse, f.hs * 0.35 * w * pulse, 0, f.yaw, 0);
-            this.setM(I.daisy, i, 0, -50, 0, 0, 0, 0);
+            this.setM(f.type === 0 ? I.tulip : I.daisy, f.hi, f.x, f.y0 + h, f.z, f.hs * 0.35 * w * pulse, f.hs * 0.5 * w * pulse, f.hs * 0.35 * w * pulse, 0, f.yaw, 0);
           }
           I.stem.instanceMatrix.needsUpdate = I.tulip.instanceMatrix.needsUpdate = I.daisy.instanceMatrix.needsUpdate = true;
         }
       }
       if (st.bloomAt < 0 || st.done) continue;
       const t0 = st.bloomAt, wet = clamp01((now - t0) / 260);
+      if (st.dry >= 0 && now >= t0){ const k = 1 - clamp01((now - t0) / 140); this.setM(I.dry, st.dry, ud.bed.x, 0, ud.bed.y, 1.9 * k, 1.6 * k * (1 + 0.6 * (1 - k)), 1.9 * k); I.dry.instanceMatrix.needsUpdate = true; }   // сухой кустик уступает цветку
       ud.soilMat.color.copy(pal('--soil-dry')).lerp(pal('--soil-wet'), wet);
       ud.rimMat.color.copy(ud.rimBase).lerp(ud.rimBloom, wet);
       if (ud.pondMat){ const w = clamp01((now - t0) / 900); ud.pondMat.color.copy(pal('--pond-dry')).lerp(pal('--water'), w);   // пруд наполняется,
@@ -1446,7 +1907,8 @@ const FX = {
       let all = true;
       if (ud.crowns){   // дерево сада: крона зеленеет и раздувается, следом наливаются плоды
         const w = clamp01((now - t0) / 500); ud.leafMat.color.copy(pal('--crown-dry')).lerp(pal('--leaf'), w);
-        ud.crowns.forEach(c => c.scale.setScalar(0.6 + 0.4 * easeBack(clamp01((now - t0 - 60) / 560))));
+        const c0 = S.water ? 0.6 + 0.28 * (S.wet[id] >= 1 ? 1 : 0) : 0.6;   // в спайке крона уже подросла от полива — раскрывается с того размера
+        ud.crowns.forEach(c => c.scale.setScalar(c0 + (1 - c0) * easeBack(clamp01((now - t0 - 60) / 560))));
         ud.fruits.forEach((f, k) => f.scale.setScalar(f.userData.s * easeBack(clamp01((now - t0 - 420 - k * 50) / 280))));
         if (now - t0 < 1100) all = false;
       }
@@ -1456,10 +1918,8 @@ const FX = {
         const s = t <= 0 ? 0 : easeBack(t), h = f.h * s, top = f.y0 + h;
         this.setM(I.stem, i, f.x, f.y0, f.z, s, h, s);
         this.setM(I.leaf, i, f.x, f.y0 + h * 0.4, f.z, s, s, s, 0, f.leaf, 0.35);
-        const head = f.type === 0 ? I.tulip : I.daisy, other = f.type === 0 ? I.daisy : I.tulip;
-        this.setM(head, i, f.x, top, f.z, f.hs * s, f.hs * s, f.hs * s, f.tilt, f.yaw, f.tilt * 0.6);
-        this.setM(other, i, 0, -50, 0, 0, 0, 0);
-        if (f.type === 1) this.setM(I.core, i, f.x, top + 0.035 * f.hs * s, f.z, f.hs * s, f.hs * s * 0.6, f.hs * s);
+        this.setM(f.type === 0 ? I.tulip : I.daisy, f.hi, f.x, top, f.z, f.hs * s, f.hs * s, f.hs * s, f.tilt, f.yaw, f.tilt * 0.6);
+        if (f.type === 1) this.setM(I.core, f.hi, f.x, top + 0.04 * f.hs * s, f.z, f.hs * s, f.hs * s * 0.6, f.hs * s);
       }
       for (const i of st.tufts){
         const f = this.tuftList[i], t = clamp01((now - t0 - 120 - f.d * 500) / 300), s = t <= 0 ? 0 : easeBack(t);
@@ -1498,7 +1958,8 @@ const FX = {
     const c = S.cloud, storm = S.t < S.storm.until && !S.over, rnd = this.rnd;
     if (this.stormOn && !storm){ this.stormOn = false; log('fx.end', 'storm'); }
     const raining = (G.screen === 'playing' && !S.over) || G.screen === 'paused' || G.screen === 'menu';
-    const want = raining ? Math.min(FXC.DROPS_MAX, Math.round((26 + 30 * c.r) * (storm ? FXC.STORM_DENSITY : 1) * (this.rainK || 1))) : 0;
+    const stg = c.stage || 0, ds = 1 + 0.2 * World.cloudVis.r;   // капля растёт с тучкой: на отъезде её видно так же
+    const want = raining ? Math.min(FXC.DROPS_MAX, Math.round((26 + 30 * c.r) * (1 + 0.2 * stg) * (storm ? FXC.STORM_DENSITY : 1) * (this.rainK || 1))) : 0;
     const top = VIEW.CLOUD_Y0 + VIEW.CLOUD_YK * World.cloudVis.r - 0.25 * World.cloudVis.r;
     for (let i = 0; i < this.drops.length; i++){
       const d = this.drops[i];
@@ -1507,14 +1968,14 @@ const FX = {
         const a = rnd() * 6.28, rr = Math.sqrt(rnd()) * c.r * 0.92;
         Object.assign(d, { on: true, x: c.x + Math.cos(a) * rr, z: c.y + Math.sin(a) * rr, y: top - rnd() * top });
       }
-      if (G.screen !== 'paused') d.y -= FXC.DROP_SPEED * (storm ? 1.25 : 1) * dt;
+      if (G.screen !== 'paused') d.y -= FXC.DROP_SPEED * (storm ? 1.25 : 1) * (1 + 0.12 * stg) * dt;
       if (d.y <= 0.05){
         if (rnd() < 0.35) this.spawnSplash(d.x, d.z);
         if (i >= want){ d.on = false; this.setM(I.drop, i, 0, -50, 0, 0, 0, 0); continue; }
         const a = rnd() * 6.28, rr = Math.sqrt(rnd()) * c.r * 0.92;
         d.x = c.x + Math.cos(a) * rr; d.z = c.y + Math.sin(a) * rr; d.y = top;
       }
-      this.setM(I.drop, i, d.x, d.y, d.z, 1, storm ? 1.4 : 1, 1);
+      this.setM(I.drop, i, d.x, d.y, d.z, ds, ds * (storm || stg >= 2 ? 1.45 : 1), ds);   // с Ливня — струи
     }
     I.drop.instanceMatrix.needsUpdate = true;
     I.drop.material.color.copy(pal('--rain')).lerp(this.WHITE, storm ? 0.45 : 0);
@@ -1522,9 +1983,14 @@ const FX = {
       const s = this.splashes[i]; if (!s.on) continue;
       const t = (now - s.born) / 260;
       if (t >= 1){ s.on = false; this.setM(I.splash, i, 0, -50, 0, 0, 0, 0); continue; }
-      const k = 0.6 + t * 2.2; this.setM(I.splash, i, s.x, 0.33, s.z, k * (1 - t * 0.6), k * (1 - t * 0.6), 1, -Math.PI / 2, 0, 0);
+      const k = (0.6 + t * 2.2) * ds; this.setM(I.splash, i, s.x, 0.33, s.z, k * (1 - t * 0.6), k * (1 - t * 0.6), 1, -Math.PI / 2, 0, 0);
     }
     I.splash.instanceMatrix.needsUpdate = true;
+    // удар молнии (Гроза): зигзаг от тучки в растение, мерцает
+    const bt = (now - (this.boltAt || -1e9)) / 220; this.bolt.visible = bt >= 0 && bt < 1 && Math.sin(bt * 40) > -0.3;
+    if (this.bolt.visible){ const tb = this.boltTo, top = VIEW.CLOUD_Y0 + VIEW.CLOUD_YK * World.cloudVis.r;
+      this.bolt.position.set(tb.x, 0, tb.y); this.bolt.scale.set(Math.max(1, tb.R * 0.5), top, 1); this.bolt.rotation.x = -0.45; }
+    const cu = World.cloudObj.userData; if (cu.stage >= 3) cu.sparks.visible = Math.sin(now / 70) > 0.55 && Math.sin(now / 530) > 0.2;   // искра под брюхом Грозы
     // вспышка молнии (лицо и тело тучки — в Emo)
     const u = World.cloudObj.userData;
     const fl = now < this.flashUntil ? Math.abs(Math.sin((this.flashUntil - now) / 380 * Math.PI * 3)) : 0;
@@ -1558,13 +2024,13 @@ const FX = {
     }
     // кольцо «сколько ещё расти»: на спящем оазисе всегда, на крупной грядке — когда тучка над ней
     const lm = S.lv.beds[S.lmId];
-    this.ring(this.lmRing, lm, !S.bloomed[S.lmId] && G.screen !== 'win', S.ready ? 1 : clamp01((c.r - CFG.R0) / (lm.R - CFG.R0)), S.ready ? 0.6 + 0.4 * Math.sin(now / 160) : 0.55);
+    this.ring(this.lmRing, lm, !S.water && !S.bloomed[S.lmId] && G.screen !== 'win', S.ready ? 1 : clamp01((c.r - CFG.R0) / (lm.R - CFG.R0)), S.ready ? 0.6 + 0.4 * Math.sin(now / 160) : 0.55);
     const nb = this.need && now < this.need.until && !S.bloomed[this.need.id] ? S.lv.beds[this.need.id] : null;
     const nbFrac = nb ? (this.need.wet ? S.wet[nb.id] : clamp01(c.r / nb.R)) : 0;   // в спайке кольцо копит воду, а не рост
-    this.ring(this.needRing, nb || lm, !!nb, nbFrac, nb ? Math.min(1, (this.need.until - now) / 300) : 0);
+    this.ring(this.needRing, nb || lm, !!nb && !S.water, nbFrac, nb ? Math.min(1, (this.need.until - now) / 300) : 0);
     this.needRing.material.color.set(nb && this.need.wet ? (S.struggle === 'cap' && S.wet[nb.id] >= CFG.STRUGGLE_CAP - 1e-6 ? 0xffc93c : 0x8fd0ff) : 0xfff3cf);
     // тело тучки полупрозрачно на «вау» — видно, что расцвело
-    const fade = now < this.fadeUntil ? 0.32 : 1; u.mat.opacity += (fade - u.mat.opacity) * Math.min(1, dt * 14);
+    const fade = now < this.fadeUntil ? 0.32 : 1; u.mat.opacity += (fade - u.mat.opacity) * Math.min(1, dt * 14); u.omat.visible = u.mat.opacity > 0.9;   // тающая тучка — без контура
     // волна весны — светлое кольцо по земле
     if (this.spring){
       const sp = this.spring, R = Math.max(0.01, FXC.SPRING_SPEED * (now - sp.born) / 1000);
@@ -1574,7 +2040,53 @@ const FX = {
       if (!sp.logged && R >= sp.maxD){ sp.logged = true; log('fx.end', 'spring'); }
     }
     if (S.ready && !S.bloomed[S.lmId]){ const st = this.beds.get(S.lmId); if (now - st.hintAt > 1000) st.hintAt = now; }   // оазис мигает кромкой
+    if (this.fills) this.updateFills(now);
     this.paintGround(now);
+  },
+  // Спайк «полив-процесс»: у каждого растения, которое пьёт заметно долго, своё кольцо-заливка. Недолитое держит кольцо и
+  // пульсирует, даже когда тучка ушла (видно, что надо вернуться); готовое — кольцо вспыхивает зелёным и расходится волной.
+  // Толщина кольца — в пикселях экрана (uPx — метров на пиксель у тучки): читается и у горшка, и у великого дерева.
+  buildFills(S){
+    const ids = S.lv.beds.filter(b => b.kind !== 'sprout').map(b => b.id), geo = new THREE.PlaneGeometry(2, 2); geo.rotateX(-Math.PI / 2);
+    const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, depthTest: false, toneMapped: false,
+      uniforms: { uFill: { value: col('--fill') }, uCap: { value: col('--star') }, uDone: { value: col('--fill-done') }, uInk: { value: col('--outline') }, uPx: { value: 0.03 } },
+      vertexShader: `attribute float aFill; attribute float aState; attribute float aAlpha; attribute float aR;
+        varying vec2 vUv; varying float vFill; varying float vState; varying float vAlpha; varying float vR;
+        void main(){ vUv = uv; vFill = aFill; vState = aState; vAlpha = aAlpha; vR = aR; gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `uniform vec3 uFill; uniform vec3 uCap; uniform vec3 uDone; uniform vec3 uInk; uniform float uPx;
+        varying vec2 vUv; varying float vFill; varying float vState; varying float vAlpha; varying float vR;
+        void main(){
+          vec2 p = vUv * 2.0 - 1.0; float r = length(p), band = (vState > 1.5 ? 7.0 : 5.0) * uPx / vR, ink = 1.3 * uPx / vR;
+          if (r > 1.0 || r < 1.0 - band) discard;
+          float a = atan(p.x, p.y), f = (a < 0.0 ? a + 6.2831853 : a) / 6.2831853;
+          bool on = f <= vFill; vec3 c = vState > 1.5 ? uDone : on ? (vState > 0.5 ? uCap : uFill) : uInk; float al = on || vState > 1.5 ? 1.0 : 0.35;   // пустой сектор — тёмный: на белой кромке тени видно, сколько осталось
+          if (r < 1.0 - band + ink || r > 1.0 - ink){ c = uInk; al = max(al, 0.85); }
+          gl_FragColor = vec4(c, al * vAlpha);
+          #include <colorspace_fragment>
+        }` });
+    const n = Math.max(1, ids.length), im = new THREE.InstancedMesh(geo, mat, n);
+    for (const [k, len] of [['aFill', 1], ['aState', 1], ['aAlpha', 1], ['aR', 1]]) geo.setAttribute(k, new THREE.InstancedBufferAttribute(new Float32Array(n), len));
+    im.frustumCulled = false; im.renderOrder = 33; for (let i = 0; i < n; i++) this.setM(im, i, 0, -50, 0, 0, 0, 0);
+    World.root.add(im); this.fills = { im, ids, mat };
+  },
+  updateFills(now){
+    const S = G.S, F = this.fills, c = S.cloud, A = F.im.geometry.attributes, last = WATER.STAGES.length - 1;
+    F.mat.uniforms.uPx.value = World.cam.w / Math.max(1, gameEl.clientWidth);
+    F.ids.forEach((id, i) => {
+      const b = S.lv.beds[id], st = this.beds.get(id), w = S.wet[id], R = b.R * 1.08 + 0.2;
+      let on = false, fill = w, state = 0, alpha = 1, k = 1;
+      if (S.bloomed[id]){   // готово: зелёная вспышка волной — только у того, что пило долго (на лету и так видно)
+        const t = (now - st.bloomAt) / 480; on = !S.over && st.took >= 0.2 && t >= 0 && t < 1;
+        if (on){ state = 2; fill = 1; k = 1 + 0.45 * easeOut(t); alpha = 1 - t * t; }
+      } else if (w > 0.001 && S.t - (S.wetT0[id] ?? S.t) > 0.12 && !S.over){   // пьёт или недолито
+        const under = Math.hypot(b.x - c.x, b.y - c.y) < c.r + b.R;
+        on = under || w >= 0.15;   // задетое краем тени и брошенное — без кольца, иначе шум; начатое всерьёз — держит кольцо state = id === S.lmId && c.stage < last && w >= WATER.FINAL_CAP - 1e-6 ? 1 : 0;
+        alpha = under ? 1 : 0.7 + 0.3 * Math.sin(now / 260 + i); k = under ? 1 : 1 + 0.05 * Math.sin(now / 260 + i);
+      }
+      if (on){ this.setM(F.im, i, b.x, 0.38, b.y, R * k, 1, R * k); A.aFill.array[i] = fill; A.aState.array[i] = state; A.aAlpha.array[i] = alpha; A.aR.array[i] = R * k; }
+      else this.setM(F.im, i, 0, -50, 0, 0, 0, 0);
+    });
+    F.im.instanceMatrix.needsUpdate = true; A.aFill.needsUpdate = A.aState.needsUpdate = A.aAlpha.needsUpdate = A.aR.needsUpdate = true;
   },
   spawnSplash(x, z){ const i = this.splashes.findIndex(s => !s.on); if (i < 0) return; Object.assign(this.splashes[i], { on: true, x, z, born: G.vt }); },
 
@@ -1620,7 +2132,7 @@ const FX = {
       c.font = '1000 ' + Math.round(f.size * k) + 'px Nunito, sans-serif';
       const half = c.measureText(f.text).width / 2 + 10, W = gameEl.clientWidth;
       const x = Math.min(W - half, Math.max(half, p.x)), y = Math.max(VIEW.HUD_SAFE_PX, p.y) + (f.under ? 38 : 0);   // не за край и не под HUD; подпись — строкой ниже
-      c.lineWidth = 6; c.strokeStyle = f.stroke || '#2b2d42'; c.strokeText(f.text, x, y);
+      c.lineWidth = 6; c.strokeStyle = f.stroke || '#2b2140'; c.strokeText(f.text, x, y);
       c.fillStyle = f.color; c.fillText(f.text, x, y);
     }
     c.globalAlpha = 1;
@@ -1640,11 +2152,17 @@ const Sfx = {
     const rnd = mulberry32(4242), buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = rnd() * 2 - 1;
     this.noise = buf;
-    const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
-    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2200; bp.Q.value = 0.5;
-    const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 600;
+    // дождь (27.10, Андрей: «шум дождя не асмрный, а именно шум»): подложка — розовый шум сквозь низкий фильтр (мягкий шелест,
+    // без шипения верхов), поверх — капельки: короткие «плинь» разной высоты в случайной панораме (update), чаще с ростом тучки
+    const pink = ac.createBuffer(1, ac.sampleRate * 3, ac.sampleRate), pd = pink.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0;   // розовый шум (фильтр Келлета) — спектр мягче белого
+    for (let i = 0; i < pd.length; i++){ const w = rnd() * 2 - 1; b0 = 0.99765 * b0 + w * 0.099046; b1 = 0.963 * b1 + w * 0.2965164; b2 = 0.57 * b2 + w * 1.0526913; pd[i] = (b0 + b1 + b2 + w * 0.1848) * 0.18; }
+    const src = ac.createBufferSource(); src.buffer = pink; src.loop = true;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2300; lp.Q.value = 0.3;
+    const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 180;
     this.rainGain = ac.createGain(); this.rainGain.gain.value = 0;
-    src.connect(bp).connect(hp).connect(this.rainGain).connect(this.master); src.start();
+    src.connect(lp).connect(hp).connect(this.rainGain).connect(this.master); src.start();
+    this.dropBus = ac.createGain(); this.dropBus.gain.value = 0; this.dropBus.connect(this.master); this.dropAcc = 0; this.dropRnd = mulberry32(777);
     log('sound', 'init');
   },
   setMuted(m){ if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.8, this.ac.currentTime, 0.03); },
@@ -1667,6 +2185,7 @@ const Sfx = {
   handle(e){
     if (!this.ac) return;
     if (e.type === 'bloom'){
+      if ((e.took || 0) >= 0.2){ this.osc('sine', 1568, 1568, 0.16, 0.07, 0.03); this.osc('triangle', 2093, 2093, 0.24, 0.06, 0.1); log('sound', 'done', 'took=' + e.took.toFixed(2)); }   // спайк: долитое — «дзынь»
       if (e.rel < CFG.REL_CRUMB){   // крошка — нота калимбы, в горсти каждая следующая выше (пентатоника, потолок — 8 шагов)
         const st = PENTA[Math.min(PENTA.length - 1, Math.max(0, FX.crumb.n - 1))], f = 880 * Math.pow(2, st / 12);
         this.osc('triangle', f, f * 0.98, 0.09, 0.05); this.osc('sine', f * 2, f * 2, 0.05, 0.015); log('sound', 'tick', 'n=' + FX.crumb.n); }
@@ -1680,6 +2199,7 @@ const Sfx = {
     else if (e.type === 'wetting'){ this.burst(0.2, 500 + e.wet * 1200, 'bandpass', 0.05, 0, 1.6); this.osc('sine', 180 + e.wet * 260, 200 + e.wet * 280, 0.18, 0.025); }   // тянется вверх — видно, что идёт
     else if (e.type === 'capped'){ [523, 659].forEach((f, k) => this.osc('sine', f, f, 0.2, 0.06, k * 0.08)); log('sound', 'capped'); }
     else if (e.type === 'storm'){ this.burst(1.6, 380, 'lowpass', 0.6, 0.05); this.burst(0.25, 1800, 'lowpass', 0.4); log('sound', 'thunder'); buzz([30, 60, 40]); }
+    else if (e.type === 'bolt'){ this.burst(0.12, 4200, 'highpass', 0.3); this.burst(0.7, 300, 'lowpass', 0.35, 0.04); log('sound', 'bolt'); buzz(18); }
     else if (e.type === 'ready'){ [784, 988, 1175].forEach((f, k) => this.osc('sine', f, f, 0.3, 0.12, k * 0.09)); log('sound', 'ready'); buzz([10, 40, 10]); }
     else if (e.type === 'spring'){   // волна весны — звенящая пробежка вверх, пока кольцо катится
       const n = Math.min(14, 6 + Math.round(e.ids.length / 10)); for (let k = 0; k < n; k++){ const f = 523 * Math.pow(2, PENTA[k % PENTA.length] / 12 + Math.floor(k / PENTA.length));
@@ -1702,6 +2222,8 @@ const Sfx = {
     else if (k === 'oo'){ this.osc('sine', 700, 1050, 0.32, 0.07); this.osc('sine', 1400, 2100, 0.2, 0.015, 0.02); }
     else if (k === 'oh'){ this.osc('sine', 440, 260, 0.5, 0.07); }
     else if (k === 'yawn'){ this.osc('sine', 520, 260, 0.8, 0.04); this.burst(0.6, 900, 'lowpass', 0.03); }
+    else if (k === 'hihi'){ for (let j = 0; j < 4; j++) this.osc('sine', 760 + j * 90, 1080 + j * 110, 0.08, 0.07, j * 0.1); }   // «хи-хи-хи»
+    else if (k === 'nnn'){ this.osc('sawtooth', 150, 165, 0.5, 0.025); this.osc('sine', 300, 320, 0.45, 0.03); }                  // «ннн!» — тужится
   },
   // рост на вехе: «вжух» (шум вверх), «уи!» и аккорд — с каждой вехой на тон выше
   levelUp(k){
@@ -1721,11 +2243,66 @@ const Sfx = {
     this.queue = this.queue.filter(q => !q.done);
     if (!this.ac || !G.S) return;
     const S = G.S, live = G.screen === 'playing' && !S.over, storm = S.t < S.storm.until && live;
-    const v = live ? (0.05 + 0.018 * S.cloud.r) * (storm ? 1.8 : 1) : G.screen === 'menu' ? 0.025 : 0.012;
+    const v = live ? (0.07 + 0.016 * S.cloud.r) * (storm ? 1.6 : 1) : G.screen === 'menu' ? 0.03 : 0.015;
     this.rainGain.gain.setTargetAtTime(v, this.ac.currentTime, 0.25);
+    // капельки: «плинь» — синус с быстрым спадом высоты, у каждой своя высота и место в панораме; над растением, которое пьёт, — ниже и мягче
+    this.dropBus.gain.setTargetAtTime(live ? 1 : G.screen === 'menu' ? 0.35 : 0, this.ac.currentTime, 0.3);
+    const rate = (live || G.screen === 'menu') && !G.paused ? (G.screen === 'menu' ? 4 : 7 + 3.2 * S.cloud.r) * (storm ? 1.5 : 1) : 0, rd = this.dropRnd;
+    this.dropAcc += dt * rate;
+    for (let k = 0; this.dropAcc >= 1 && k < 8; k++){
+      this.dropAcc -= 1; const t = this.ac.currentTime + rd() * 0.04, leaf = Emo.effort && rd() < 0.5;
+      const f = leaf ? 650 + rd() * 500 : 1500 + rd() * 2600, o = this.ac.createOscillator(), g = this.ac.createGain(), pan = this.ac.createStereoPanner ? this.ac.createStereoPanner() : null;
+      o.type = 'sine'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.55, t + 0.045);
+      this.env(g, t, 0.002, (leaf ? 0.035 : 0.022) * (0.5 + rd()), leaf ? 0.08 : 0.045);
+      if (pan){ pan.pan.value = rd() * 1.6 - 0.8; o.connect(g).connect(pan).connect(this.dropBus); } else o.connect(g).connect(this.dropBus);
+      o.start(t); o.stop(t + 0.14);
+    }
+    if (this.dropAcc > 4) this.dropAcc = 0;   // вкладка была в фоне — не сыпать очередь разом
   },
 };
 function buzz(p){ try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+// --- музыка (пресет «Тун-игрушка»: с первой версии, синтезатор WebAudio) ---
+// Светлая пустынная тема: D · Bm · G · A по такту, пэд и бас, калимба-арпеджио. Растёт вместе с тучкой: с каждой вехой
+// слой гуще (калимба чаще → шейкер → верхний голос). В меню тише и реже; пауза, конец партии и скрытая вкладка — тишина.
+const MUSIC = { BPM: 96, VOL: 0.15, MENU_VOL: 0.08, AHEAD: 0.25 };
+const Music = {
+  bus: null, next: 0, step: 0, on: false,
+  CHORDS: [[62, 66, 69], [59, 62, 66], [55, 59, 62], [57, 61, 64]],   // midi
+  ARP: [0, 2, 1, 2, 0, 2, 1, 3],                                     // ступень аккорда по восьмым; 3 — тоника октавой выше
+  hz: (m) => 440 * Math.pow(2, (m - 69) / 12),
+  tick(){
+    const ac = Sfx.ac; if (!ac || ac.state !== 'running') return;
+    if (!this.bus){ this.bus = ac.createGain(); this.bus.gain.value = 0; this.bus.connect(Sfx.master); }
+    const want = !G.paused && !document.hidden && (G.screen === 'menu' || (G.screen === 'playing' && G.S && !G.S.over));
+    this.bus.gain.setTargetAtTime(want ? (G.screen === 'menu' ? MUSIC.MENU_VOL : MUSIC.VOL) : 0, ac.currentTime, want ? 0.4 : 0.12);
+    if (!want){ if (this.on) log('sound', 'music', 'off'); this.on = false; return; }
+    if (!this.on){ this.on = true; this.next = ac.currentTime + 0.05; this.step = 0; log('sound', 'music', 'on'); }
+    const dt = 60 / MUSIC.BPM / 4;   // шестнадцатая
+    while (this.next < ac.currentTime + MUSIC.AHEAD){ this.play(this.step, this.next, dt); this.next += dt; this.step = (this.step + 1) % 64; }
+  },
+  layer(){ return G.screen === 'playing' && G.S ? Math.min(3, G.S.water ? G.S.cloud.stage : Emo.gateTop + 1) : 0; },   // взятых вех; в спайке — ступень тучки
+  play(st, t, dt){
+    const ch = this.CHORDS[Math.floor(st / 16)], s = st % 16, L = this.layer();
+    if (s === 0){ ch.forEach(m => this.note('sine', this.hz(m - 12), t, dt * 15, 0.045, 0.3)); this.note('triangle', this.hz(ch[0] - 24), t, dt * 6, 0.2, 0.01); }   // пэд и бас
+    if (s === 8) this.note('triangle', this.hz(ch[0] - 17), t, dt * 5, 0.14, 0.01);   // бас на квинту
+    if (s % 2 === 0 && (L >= 1 || s % 4 === 0)){ const k = this.ARP[s / 2], m = k === 3 ? ch[0] + 12 : ch[k]; this.pluck(this.hz(m + 12), t, 0.08); }
+    if (L >= 2 && s % 4 === 2) this.shaker(t, 0.045);
+    if (L >= 3 && (s === 3 || s === 11)) this.pluck(this.hz(ch[2] + 24), t, 0.04);
+  },
+  note(type, f, t, dur, peak, att){
+    const ac = Sfx.ac, o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + att); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(this.bus); o.start(t); o.stop(t + dur + 0.05);
+  },
+  pluck(f, t, peak){ this.note('triangle', f, t, 0.35, peak, 0.004); this.note('sine', f * 2, t, 0.18, peak * 0.3, 0.004); },
+  shaker(t, peak){
+    const ac = Sfx.ac, s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = Sfx.noise; f.type = 'highpass'; f.frequency.value = 6000;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    s.connect(f).connect(g).connect(this.bus); s.start(t, (t * 13) % 1.5); s.stop(t + 0.1);
+  },
+};
+setInterval(() => Music.tick(), 50);
 
 // --- сцена победы: камера над всей картой, пустыня доливается зеленью, вырастает радуга, летят птицы ---
 const WIN = {
@@ -1764,7 +2341,7 @@ const WinScene = {
       const c = buildCloud(); c.userData.face.visible = false; c.scale.setScalar(2.2); c.position.set(sx * (R - 3 * WIN.BAND), 0.6, 0); c.visible = false; g.add(c); this.ends.push(c);
     }
     World.root.add(g); this.group = g;
-    const birdMat = new THREE.MeshBasicMaterial({ color: 0x3a3f55 }), wingG = new THREE.BoxGeometry(0.7, 0.06, 0.16);
+    const birdMat = new THREE.MeshBasicMaterial({ color: col('--outline') }), wingG = new THREE.BoxGeometry(0.7, 0.06, 0.16);
     const rnd = mulberry32(31 + seedOf(S.li));
     for (let k = 0; k < 6; k++){
       const b = new THREE.Group(), l = new THREE.Mesh(wingG, birdMat), r = new THREE.Mesh(wingG, birdMat);
@@ -1772,7 +2349,7 @@ const WinScene = {
       b.visible = false; World.root.add(b);
       this.birds.push({ b, lp, rp, x0: -6 - k * 2.2, z: lv.h * (0.18 + rnd() * 0.25), y: 7 + rnd() * 4, sp: 7 + rnd() * 2, ph: rnd() * 6, delay: 900 + k * 160 });
     }
-    sun.intensity = 2.1;
+    sun.intensity = G.theme.sun * 1.25;   // победа — солнце ярче
   },
   update(dt){
     if (!this.on) return;
@@ -1787,13 +2364,15 @@ const WinScene = {
         ctx.globalAlpha = gp >= 1 ? 1 : 0.35; ctx.fillStyle = css('--grass');
         if (gp >= 1) ctx.fillRect(0, 0, lv.w * P, lv.h * P); else { ctx.beginPath(); ctx.arc(lm.x * P, lm.y * P, rr * P, 0, Math.PI * 2); ctx.fill(); }
         ctx.globalAlpha = 1;
-        if (gp >= 1){ const rnd = mulberry32(5 + seedOf(S.li)); ctx.fillStyle = css('--grass-dark'); ctx.globalAlpha = 0.35;
-          for (let k = 0; k < lv.w * lv.h * 2; k++) ctx.fillRect(rnd() * lv.w * P, rnd() * lv.h * P, 2, 3); ctx.globalAlpha = 1;
+        if (gp >= 1){ const rnd = mulberry32(5 + seedOf(S.li));
+          for (let k = 0; k < lv.w * lv.h / 30; k++) paintGreen(ctx, { x: rnd() * lv.w, y: rnd() * lv.h, R: 3 + rnd() * 5 }, 1, false);   // пятна оттенков: лужайка, а не заливка
+          ctx.fillStyle = css('--grass-deep'); ctx.globalAlpha = 0.3;
+          for (let k = 0; k < lv.w * lv.h * 2; k++) ctx.fillRect(rnd() * lv.w * P, rnd() * lv.h * P, 1.5, 3); ctx.globalAlpha = 1;
           if (lv.decor) paintPlace(ctx, lv, true);
           // мягкий переход к дюнам по краю
           const E = 3 * P, W = lv.w * P, H = lv.h * P;
           for (const [x0, y0, x1, y1, rx, ry, rw, rh] of [[0, 0, 0, E, 0, 0, W, E], [0, H, 0, H - E, 0, H - E, W, E], [0, 0, E, 0, 0, 0, E, H], [W, 0, W - E, 0, W - E, 0, E, H]]){
-            const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, css('--dune')); g.addColorStop(1, 'rgba(234,198,138,0)'); ctx.fillStyle = g; ctx.fillRect(rx, ry, rw, rh); }
+            const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, css('--dune')); g.addColorStop(1, css('--dune') + '00'); ctx.fillStyle = g; ctx.fillRect(rx, ry, rw, rh); }
           this.greenDone = true; log('fx.end', 'wingreen');
         }
         World.groundTex.needsUpdate = true;
@@ -1829,12 +2408,15 @@ const EMO = {
   STRETCH: 0.07,                        // растяжение по ходу на полной скорости
   IDLE_MS: 1500, YAWN_MS: 4000,         // без ввода: озирается, потом зевает
   EFFORT_MAX_MS: 2000,                  // тужится над крупной грядкой не дольше, потом «пф»
+  EFFORT_FULL_S: 1.5,                   // спайк: тужится над тем, что пьётся с нуля дольше этого (Андрей 27.10)
   WORRY_S: 15,                          // тревога: до конца меньше этого, а до оазиса тень ещё не доросла
   LEVELUP_DELAY_MS: 250,                // рост на вехе — после радости расцвета
   LEVELUP_MS: 1150,
   PUFFS: 8,                             // мини-пуфы, разлетающиеся на росте
 };
 const STAGE_NAMES = ['Облачко', 'Тучка', 'Туча', 'Ливень', 'Тучища', 'Муссон'];   // кто ты после стольких вех
+const WATER_STAGE_HINT = ['', 'по силам деревья', 'по силам огороды · лужи', 'молнии · по силам рощи', 'буди великое дерево!'];   // спайк: что дала ступень
+const finalWake = (S) => bedKind(S.lv.beds[S.lmId], true) === 'oasis' ? 'Оживи озеро!' : 'Буди великое дерево!';
 const Emo = {
   reset(){
     const now = G.vt;
@@ -1842,12 +2424,19 @@ const Emo = {
       joyUntil: 0, crumbUntil: 0, effort: null, gateTop: -1, deflateAt: -1e9, readyAt: -1e9, stormUntil: 0, levelAt: -1e9, levelK: 0, levelStarted: true,
       mood: null, moodAt: 0, lastInput: now, yawnAt: -1e9, idleLook: { x: 0, y: 0 }, idleNext: 0, aim: null, aimV: 0, aimNext: 0, aimCov: 0, amAt: -1e9,
       blinkAt: now + 1500, blinkEnd: 0, startAt: -1e9, wasMoving: false, state: '', look: { x: 0, y: 0 } });
-    const geo = new THREE.IcosahedronGeometry(1, 1), mat = new THREE.MeshLambertMaterial({ color: col('--cloud'), emissive: col('--cloud-shade'), emissiveIntensity: 0.35 });
-    this.puffs = []; for (let k = 0; k < EMO.PUFFS; k++){ const m = new THREE.Mesh(geo, mat); m.visible = false; World.root.add(m); this.puffs.push({ m, born: -1e9, a: 0, life: 700, d: 1 }); }
+    const geo = new THREE.IcosahedronGeometry(1, 1), mat = cloudMat(), omat = World.cloudObj.userData.omat;   // пуфы — кусочки той же тучки
+    this.puffs = []; for (let k = 0; k < EMO.PUFFS; k++){ const m = new THREE.Mesh(geo, mat); outline(m, omat, false); m.visible = false; World.root.add(m); this.puffs.push({ m, born: -1e9, a: 0, life: 700, d: 1 }); }
     this.ringM = new THREE.Mesh(new THREE.RingGeometry(0.95, 1, 72), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
     this.ringM.rotation.x = -Math.PI / 2; this.ringM.position.y = 0.33; this.ringM.visible = false; this.ringAt = -1e9; World.root.add(this.ringM);
   },
   hop(h, ms){ this.hopAt = G.vt; this.hopH = h; this.hopMs = ms; },
+  laugh(){   // спайк: облила жителя — хихикает: глаза «^^», рот до ушей, подпрыгивает
+    const now = G.vt; if (now - (this.laughAt || -1e9) < PEOPLE.LAUGH_GAP_MS || G.S.over) return;
+    this.laughAt = now; this.joyUntil = Math.max(this.joyUntil, now + 900); this.hop(0.14, 300); this.squash(0.08); Sfx.voice('hihi');
+    const c = G.S.cloud; FX.float('хи-хи!', c.x + World.cloudVis.r * 0.7, VIEW.CLOUD_Y0 + VIEW.CLOUD_YK * World.cloudVis.r + World.cloudVis.r * 0.4, c.y,
+      { size: 22, life: 900, rise: 0.8, color: '#ffffff', stroke: '#4aa3d8', follow: true });
+    log('emo', 'laugh');
+  },
   squash(k){ this.squashAt = G.vt; this.squashK = k; },
   puffBurst(n, dist){
     const now = G.vt, rnd = FX.rnd, a0 = rnd() * Math.PI * 2;
@@ -1868,6 +2457,13 @@ const Emo = {
         this.levelAt = now + EMO.LEVELUP_DELAY_MS; this.levelK = e.gate + 1; this.levelStarted = false;
         FX.camHoldW = World.cam.w; FX.camHoldUntil = now + VIEW.CAM_HOLD_MS;
       }
+    } else if (e.type === 'evolve'){   // спайк: новая ступень тучки — тот же момент роста, что на вехе, но с новым видом
+      G.stageR0 = S.cloud.r; this.levelAt = now + EMO.LEVELUP_DELAY_MS; this.levelK = e.stage; this.levelStarted = false;
+      FX.camHoldW = World.cam.w; FX.camHoldUntil = now + VIEW.CAM_HOLD_MS;
+    } else if (e.type === 'wetting' && S.water && !S.over && (e.full >= EMO.EFFORT_FULL_S || e.rel >= 0.8)){   // спайк: долгое или крупное — тужится, пока идёт вода
+      if (!this.effort || this.effort.id !== e.id){ this.effort = { id: e.id, at: now, seen: now }; Sfx.voice('nnn');
+        if (now - (this.nnnAt || -1e9) > 2500){ this.nnnAt = now; FX.say('ннн!', 2, { size: 28, life: 900, color: '#ffffff', stroke: '#c2410c' }); } }
+      else { this.effort.seen = now; this.effort.at = Math.max(this.effort.at, now - 1200); }
     } else if (e.type === 'wetting' && this.effort && this.effort.id === e.id){ this.effort.seen = now; this.effort.at = Math.max(this.effort.at, now - 1200);   // идёт — не сдаётся
     } else if (e.type === 'tooBig' && !S.over){
       if (!this.effort){ this.effort = { id: e.id, at: now, seen: now }; Sfx.voice('mm'); }
@@ -1882,9 +2478,11 @@ const Emo = {
     const S = G.S, now = G.vt, k = this.levelK, g = nextGateBed(S);
     G.hitstopUntil = Math.max(G.hitstopUntil, now + 90);   // короткий стоп-кадр: присед и раздувание видно, а игра не встаёт
     this.puffBurst(EMO.PUFFS, 0.9); this.ringAt = now + 120;
-    FX.say(STAGE_NAMES[Math.min(k, STAGE_NAMES.length - 1)] + '!', 7, { size: 46, life: 1500, stroke: '#4aa3d8' });
-    FX.float(g ? 'дальше — ' + KIND_NAMES[bedKind(g, false)].toLowerCase() : 'к оазису!', S.cloud.x, VIEW.CLOUD_Y0 + VIEW.CLOUD_YK * World.cloudVis.r + World.cloudVis.r * 0.6, S.cloud.y,
-      { size: 20, life: 1500, rise: 0.6, color: '#fff3cf', stroke: '#2b2d42', follow: true, under: true });
+    if (S.water) setCloudStage(World.cloudObj, k);   // спайк: тучка меняет вид в момент роста
+    FX.say((S.water ? WATER.STAGES[k].name : STAGE_NAMES[Math.min(k, STAGE_NAMES.length - 1)]) + '!', 7, { size: 46, life: 1500, stroke: '#4aa3d8' });
+    const next = S.water ? (k === WATER.STAGES.length - 1 ? finalWake(S).toLowerCase() : WATER_STAGE_HINT[k]) : g ? 'дальше — ' + KIND_NAMES[bedKind(g, false)].toLowerCase() : 'к оазису!';
+    FX.float(next, S.cloud.x, VIEW.CLOUD_Y0 + VIEW.CLOUD_YK * World.cloudVis.r + World.cloudVis.r * 0.6, S.cloud.y,
+      { size: 20, life: 1500, rise: 0.6, color: '#fff3cf', stroke: '#2b2140', follow: true, under: true });
     FX.trauma = Math.min(1, FX.trauma + 0.3); FX.rainBurstUntil = now + 520;
     Sfx.levelUp(k); buzz([15, 40, 25]);
     log('fx.start', 'levelup', 'stage=' + k);
@@ -1899,9 +2497,9 @@ const Emo = {
     if (!this.levelStarted && now >= this.levelAt){ this.levelStarted = true; this.levelUp(); }
     const lt = (now - this.levelAt) / EMO.LEVELUP_MS, leveling = this.levelStarted && lt >= 0 && lt < 1;
     if (this.effort){ const b = S.lv.beds[this.effort.id];
-      if (!live || S.bloomed[b.id] || b.R <= c.r) this.effort = null;
+      if (!live || S.bloomed[b.id] || (!S.water && b.R <= c.r)) this.effort = null;   // в спайке пьёт и то, что влезает: тужится, пока идёт вода
       else { if (overlaps(c, b)) this.effort.seen = now;
-        if (now - this.effort.seen > 150 || now - this.effort.at > EMO.EFFORT_MAX_MS){ this.effort = null; this.deflateAt = now; Sfx.voice('pf'); this.puffBurst(3, 0.6); } } }
+        if (now - this.effort.seen > (S.water ? 350 : 150) || (!S.water && now - this.effort.at > EMO.EFFORT_MAX_MS)){ this.effort = null; this.deflateAt = now; Sfx.voice('pf'); this.puffBurst(3, 0.6); } } }
     const g = nextGateBed(S), target = S.ready && !S.bloomed[S.lmId] ? lm : g && S.gateReady[g.id] ? g : null;
     const left = S.lv.time - S.t, worry = live && !S.ready && left <= EMO.WORRY_S, idle = live && now - this.lastInput > EMO.IDLE_MS && !Intro.active();
     const excited = now - this.readyAt < 700, joy = now < this.joyUntil, storm = now < this.stormUntil;
@@ -1939,7 +2537,9 @@ const Emo = {
     if (target){ smile = Math.max(smile, 1.5); if (excited){ eye = 1.3; mo = 0.6; brow = { y: 0.36, rot: 0 }; } }
     if (this.aim && live && !this.effort){ mo = Math.max(mo, clamp01((this.aimCov - 0.7) / 0.3) * 0.8); if (this.aimCov > 0.7) brow = brow || { y: 0.33, rot: 0 }; }
     if (now - this.amAt < 140) mo = 0;   // «ам!»
-    if (this.effort){ const et = now - this.effort.at; eye = 0.45; brow = { y: 0.26, rot: -0.35 }; mo = 0.4; smile = 0.6; cheek = 1.6; if (et > 500) sweat = clamp01((et - 500) / 600); }
+    if (this.effort){ const et = now - this.effort.at, strain = S.water ? 1 + 0.12 * Math.sin(now / 70) : 1;   // спайк: щёки ходят, как на вдохе
+      eye = S.water ? 0.25 : 0.45; brow = { y: 0.26, rot: S.water ? -0.45 : -0.35 }; mo = S.water ? 0.25 : 0.4; smile = S.water ? 0.4 : 0.6; cheek = (S.water ? 2 : 1.6) * strain;
+      if (et > (S.water ? 250 : 500)) sweat = clamp01((et - (S.water ? 250 : 500)) / 600); }
     if (worry && !this.effort){ brow = brow || { y: 0.33, rot: 0.3 }; eye = Math.max(eye, 1.1); sweat = ((now / 1600) % 1); }
     if (idle && !this.mood && !target){ if (now - this.lastInput > EMO.YAWN_MS && now - this.yawnAt > 6000){ this.yawnAt = now; Sfx.voice('yawn'); }
       const yt = (now - this.yawnAt) / 1200; if (yt >= 0 && yt < 1){ mo = Math.sin(yt * Math.PI); eye = 0.3; } }
@@ -1972,7 +2572,7 @@ const Emo = {
     if (leveling){ const ms = lt * EMO.LEVELUP_MS;
       if (ms < 120){ const q = ms / 120; sx *= 1 + 0.12 * q; sz *= 1 + 0.12 * q; sy *= 1 - 0.2 * q; }
       else grow = ms < 340 ? 1 + 0.35 * easeOut((ms - 120) / 220) : ms < 500 ? 1.35 - 0.41 * ((ms - 340) / 160) : ms < 620 ? 0.94 + 0.08 * ((ms - 500) / 120) : ms < 770 ? 1.02 - 0.02 * ((ms - 620) / 150) : 1; }
-    if (this.effort) grow *= 1.06;
+    if (this.effort) grow *= S.water ? 1.05 + 0.025 * Math.sin(now / 70) : 1.06;   // спайк: тужится — пульсирует
     const dft = (now - this.deflateAt) / 250; if (dft >= 0 && dft < 1) grow *= dft < 0.5 ? 1.06 - 0.24 * dft : 0.94 + 0.12 * (dft - 0.5);
     if (this.mood === 'lose') sy *= 1 - 0.1 * clamp01(mt / 0.8);
     u.body.scale.set(sx * grow, sy * grow, sz * grow);
@@ -1984,10 +2584,10 @@ const Emo = {
     if (this.mood === 'win' && mt < 1.35) hop = Math.max(hop, 0.3 * Math.abs(Math.sin(mt / 0.45 * Math.PI)));   // три прыжка
     o.position.y += hop * r + (idle && !this.mood ? Math.sin(now / 900) * 0.06 * r : 0) - (this.mood === 'lose' ? 0.3 * r * clamp01(mt / 0.8) : 0);
     // оттенок: гроза — синий, тужится — тёплый, ждёт цель — золотой, проигрыш — серый
-    u.mat.emissive.copy(pal('--cloud-shade')).lerp(FX.STORMC, storm && live ? 0.6 : 0);
-    if (this.effort) u.mat.emissive.lerp(pal('--pot-lip'), 0.15);
-    else if (target) u.mat.emissive.lerp(pal('--star'), excited ? 0.25 : 0.12);
-    if (this.mood === 'lose') u.mat.emissive.lerp(pal('--muted'), 0.35 * clamp01(mt / 0.8));
+    u.tint.copy(FX.WHITE).lerp(FX.STORMC, storm && live ? 0.6 : 0);
+    if (this.effort) u.tint.lerp(pal('--pot-lip'), S.water ? 0.28 : 0.15);   // покраснела от усилия
+    else if (target) u.tint.lerp(pal('--star'), excited ? 0.3 : 0.15);
+    if (this.mood === 'lose') u.tint.lerp(pal('--muted'), 0.35 * clamp01(mt / 0.8));
     // дождь: тужится — гуще, скучает — реже (множитель для FX)
     FX.rainK = now < (FX.rainBurstUntil || 0) ? 2 : this.effort ? 1.6 : idle ? 0.7 : 1;
     // мини-пуфы и кольцо роста
@@ -1997,6 +2597,120 @@ const Emo = {
       p.m.scale.setScalar(r * 0.22 * (1 - t) + 0.001); }
     const rt = (now - this.ringAt) / 600; this.ringM.visible = rt >= 0 && rt < 1;
     if (this.ringM.visible){ const R = c.r * (1 + 1.4 * easeOut(rt)); this.ringM.position.x = c.x; this.ringM.position.z = c.y; this.ringM.scale.set(R, R, 1); this.ringM.material.opacity = 0.85 * (1 - rt); }
+  },
+};
+
+// --- жители (спайк «Новый полив», 27.10, Андрей: «пусть ходят люди и когда их поливаешь — они смешно злятся, кто-то
+// открывает зонт, а тучка весело смеётся»). Гуляют вдоль троп места. Попал под дождь: одни встают, краснеют, грозят кулаком,
+// кричат и убегают из-под тучки; другие раскрывают зонт и идут дальше. Тучка хихикает. Косметика: ядро о них не знает.
+const PEOPLE = { N: 12, SCALE: 1.35, SPEED: 1.3, FLEE: 4.2, UMBRELLA: 0.4, OUT_MS: 900, ANGRY_MS: 1300, AGAIN_MS: 2600, CLOSE_MS: 1200, LAUGH_GAP_MS: 1400, OUT: 0.04 };
+// злой житель: сначала выскакивает из-под дождя (bolt), потом на виду грозит тучке кулаком (angry) — под тучкой сцену не видно
+const PEOPLE_WORDS = ['Эй!', 'Ну что такое!', 'Ай, мокро!', 'Тьфу!', 'Безобразие!', 'Кыш!', 'Моя причёска!'];
+// Слить детали с цветами вершин (как ART у «Отряда НЛО»): одна геометрия на жителя — один вызов отрисовки и один контур.
+function mergeColored(parts){   // [geometry, [x, y, z], scale, токен цвета]
+  const gs = parts.map(([g, p, sc, tok]) => { const c = g.index ? g.toNonIndexed() : g.clone(), k = typeof sc === 'number' ? [sc, sc, sc] : sc;
+    c.applyMatrix4(_mm.compose(_mp.set(p[0], p[1], p[2]), _mq.identity(), _ms.set(k[0], k[1], k[2])));
+    const cl = pal(tok), n = c.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++){ a[i * 3] = cl.r; a[i * 3 + 1] = cl.g; a[i * 3 + 2] = cl.b; }
+    c.setAttribute('color', new THREE.BufferAttribute(a, 3)); return c; });
+  const n = gs.reduce((s, g) => s + g.attributes.position.count, 0), P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = new Float32Array(n * 3);
+  let o = 0; for (const g of gs){ P.set(g.attributes.position.array, o * 3); N.set(g.attributes.normal.array, o * 3); C.set(g.attributes.color.array, o * 3); o += g.attributes.position.count; g.dispose(); }
+  const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.BufferAttribute(P, 3)); out.setAttribute('normal', new THREE.BufferAttribute(N, 3)); out.setAttribute('color', new THREE.BufferAttribute(C, 3));
+  out.computeBoundingSphere(); return out;
+}
+function buildPerson(k){
+  const SP = bedGeo('p-sphere', () => new THREE.SphereGeometry(1, 12, 9)), CY = bedGeo('p-cyl', () => new THREE.CylinderGeometry(1, 1, 1, 10)), CB = bedGeo('p-body', () => new THREE.CylinderGeometry(0.8, 1, 1, 10));
+  const skin = ['--skin1', '--skin2', '--skin3', '--skin4'][k % 4], shirt = FLOWER_COLORS[(k * 5 + 1) % FLOWER_COLORS.length], hair = ['--hair1', '--hair2', '--hair3'][k % 3];
+  const shell = [[CB, [0, 0.62, 0], [0.24, 0.5, 0.22], shirt], [SP, [0, 1.08, 0], 0.27, skin], [SP, [0, 1.17, -0.03], [0.285, 0.2, 0.285], hair]];   // большая голова — обаяние пресета
+  if (k % 3 === 1) shell.push([CY, [0, 1.31, 0], [0.42, 0.035, 0.42], '--straw'], [CY, [0, 1.4, 0], [0.2, 0.16, 0.2], '--straw']);   // соломенная шляпа
+  const face = [[SP, [-0.1, 1.11, 0.235], [0.05, 0.06, 0.03], '--outline'], [SP, [0.1, 1.11, 0.235], [0.05, 0.06, 0.03], '--outline'],
+    [SP, [-0.085, 1.13, 0.262], 0.016, '--cloud'], [SP, [0.115, 1.13, 0.262], 0.016, '--cloud'], [SP, [-0.17, 1.02, 0.2], [0.05, 0.035, 0.02], '--cheek'], [SP, [0.17, 1.02, 0.2], [0.05, 0.035, 0.02], '--cheek']];
+  const g = new THREE.Group(), mat = toon({ vertexColors: true }), body = new THREE.Mesh(mergeColored([...shell, ...face]), mat);
+  const ol = new THREE.Mesh(hullGeo(mergeColored(shell)), outlineMat(PEOPLE.OUT)); body.add(ol);   // глаза и румянец — без контура (мелочь)
+  const legG = bedGeo('p-leg', () => { const q = new THREE.CylinderGeometry(0.07, 0.07, 0.36, 8); q.translate(0, -0.18, 0); return q; }), legMat = toon({ color: pal('--pants') });
+  const legs = [-1, 1].map(sx => { const m = new THREE.Mesh(legG, legMat); m.position.set(sx * 0.09, 0.38, 0); return m; });
+  const arm = new THREE.Mesh(bedGeo('p-arm', () => { const q = new THREE.CylinderGeometry(0.055, 0.055, 0.32, 8); q.translate(0, -0.16, 0); return q; }), toon({ color: pal(shirt) }));
+  arm.position.set(0.25, 0.82, 0); arm.rotation.z = 0.18;
+  const umb = new THREE.Group(), cone = bedGeo('p-cone', () => new THREE.ConeGeometry(1, 1, 12));
+  const ug = mergeColored([[cone, [0, 1.75, 0], [0.78, 0.3, 0.78], FLOWER_COLORS[(k * 3 + 2) % FLOWER_COLORS.length]], [CY, [0, 1.28, 0], [0.022, 1.1, 0.022], '--wood']]);
+  { const P = ug.attributes.position, C = ug.attributes.color, w = pal('--cloud');   // купол полосками: через клин — белый, сразу видно зонт
+    for (let t = 0; t < P.count; t += 3){ const cy = (P.getY(t) + P.getY(t + 1) + P.getY(t + 2)) / 3; if (cy < 1.55) continue;
+      const a = Math.atan2((P.getZ(t) + P.getZ(t + 1) + P.getZ(t + 2)) / 3, (P.getX(t) + P.getX(t + 1) + P.getX(t + 2)) / 3);
+      if (Math.floor((a + Math.PI) / (Math.PI / 6)) % 2) for (let j = 0; j < 3; j++) C.setXYZ(t + j, w.r, w.g, w.b); } }
+  const um = new THREE.Mesh(ug, toon({ vertexColors: true })); um.add(new THREE.Mesh(hullGeo(ug), outlineMat(PEOPLE.OUT))); umb.add(um); umb.scale.setScalar(0.001); umb.visible = false;
+  g.add(body, ...legs, arm, umb); g.scale.setScalar(PEOPLE.SCALE);
+  return { g, mat, legs, arm, umb };
+}
+const People = {
+  list: [], shadows: null,
+  reset(S){
+    this.list = []; this.shadows = null;
+    const paths = (S.lv.decor && S.lv.decor.paths) || []; if (!S.water || !paths.length) return;
+    const rnd = mulberry32(31 + seedOf(S.li)), routes = paths.map(pts => { const seg = []; let L = 0;
+      for (let i = 0; i + 1 < pts.length; i++){ const l = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); seg.push({ a: pts[i], b: pts[i + 1], s0: L, l }); L += l; }
+      return { seg, L }; });
+    const sg = new THREE.PlaneGeometry(1, 1); sg.rotateX(-Math.PI / 2);
+    this.shadows = new THREE.InstancedMesh(sg, new THREE.MeshBasicMaterial({ color: col('--outline'), map: BLOB_TEX, transparent: true, opacity: SH.BLOB_OP, depthWrite: false }), PEOPLE.N);
+    this.shadows.renderOrder = 1; this.shadows.frustumCulled = false; World.root.add(this.shadows);
+    for (let k = 0; k < PEOPLE.N; k++){
+      const route = routes[k % routes.length], m = buildPerson(k); World.root.add(m.g);
+      this.list.push(Object.assign(m, { k, route, s: (k + 0.5) / PEOPLE.N * route.L, dir: k % 2 ? 1 : -1, off: (k % 2 ? 1 : -1) * (0.9 + rnd() * 0.9),
+        speed: PEOPLE.SPEED * (0.8 + rnd() * 0.4), umbType: rnd() < PEOPLE.UMBRELLA, state: 'walk', at: 0, againAt: 0, lastUnder: -1e9, dx: 0, dz: 0, fx: 0, fz: 0, ph: rnd() * 6, x: 0, z: 0, umbK: 0 }));
+    }
+  },
+  at(route, s){   // точка и касательная на тропе
+    const t = route.seg.find(q => s <= q.s0 + q.l) || route.seg[route.seg.length - 1], f = clamp01((s - t.s0) / Math.max(1e-6, t.l));
+    const tx = (t.b[0] - t.a[0]) / Math.max(1e-6, t.l), ty = (t.b[1] - t.a[1]) / Math.max(1e-6, t.l);
+    return { x: t.a[0] + (t.b[0] - t.a[0]) * f, y: t.a[1] + (t.b[1] - t.a[1]) * f, tx, ty };
+  },
+  update(dt){
+    const S = G.S; if (!S || !this.list.length) return;
+    const now = G.vt, c = S.cloud, live = !S.over && G.screen === 'playing' && !Intro.active(), m4 = FX._m, q = FX._q, e = FX._e, pv = FX._p, sv = FX._s;
+    this.list.forEach((p, i) => {
+      const under = live && Math.hypot(p.x - c.x, p.z - c.y) < c.r * 0.95;
+      let walk = p.state === 'walk' || p.state === 'umbrella' ? (p.state === 'umbrella' ? 0.7 : 1) : 0, faceX = 0, faceZ = 0;
+      if (p.state === 'walk' && under && now >= p.againAt){   // попал под дождь
+        p.at = now; Emo.laugh();
+        if (p.umbType){ p.state = 'umbrella'; p.umb.visible = true; log('fx.start', 'umbrella', 'p=' + i); }
+        else { p.state = 'bolt'; log('fx.start', 'angry', 'p=' + i); }
+      }
+      if (p.state === 'bolt'){   // выскочить из-под дождя: бегом от центра тучки
+        const d = Math.hypot(p.x - c.x, p.z - c.y) || 1; p.fx = (p.x - c.x) / d; p.fz = (p.z - c.y) / d;
+        p.dx += p.fx * PEOPLE.FLEE * dt; p.dz += p.fz * PEOPLE.FLEE * dt; faceX = p.fx; faceZ = p.fz;
+        if (d > c.r + 0.7 || now - p.at > PEOPLE.OUT_MS){ p.state = 'angry'; p.at = now;
+          FX.float(PEOPLE_WORDS[(i + Math.floor(now / 997)) % PEOPLE_WORDS.length], p.x, 2.3, p.z, { size: 18, life: 1300, rise: 0.6, color: '#ffffff', stroke: '#e03131' }); } }
+      else if (p.state === 'angry'){ faceX = c.x - p.x; faceZ = c.y - p.z;   // на виду: красный, кулак, жилка — грозит тучке
+        if (under){ p.state = 'bolt'; p.at = now; }                          // тучка догнала — снова наутёк
+        else if (now - p.at > PEOPLE.ANGRY_MS){ p.state = 'walk'; p.againAt = now + PEOPLE.AGAIN_MS; log('fx.end', 'angry', 'p=' + i); } }
+      else if (p.state === 'umbrella'){ if (under) p.lastUnder = now;
+        else if (now - Math.max(p.at, p.lastUnder) > PEOPLE.CLOSE_MS){ p.state = 'walk'; p.againAt = now + PEOPLE.AGAIN_MS; log('fx.end', 'umbrella', 'p=' + i); } }
+      if (walk && G.screen !== 'paused'){ p.s += p.dir * p.speed * walk * dt; if (p.s < 0){ p.s = 0; p.dir = 1; } if (p.s > p.route.L){ p.s = p.route.L; p.dir = -1; }
+        const k = Math.exp(-dt * 0.5); p.dx *= k; p.dz *= k; }   // после бегства — потихоньку назад к тропе
+      const a = this.at(p.route, p.s), nx = -a.ty, ny = a.tx;
+      p.x = Math.min(S.lv.w - 0.5, Math.max(0.5, a.x + nx * p.off + p.dx)); p.z = Math.min(S.lv.h - 0.5, Math.max(0.5, a.y + ny * p.off + p.dz));
+      if (!faceX && !faceZ){ faceX = a.tx * p.dir; faceZ = a.ty * p.dir; }
+      const run = p.state === 'bolt' ? 2.4 : walk, ph = now / 1000 * (p.speed * run * 7) + p.ph, sw = run ? Math.sin(ph) * 0.6 : 0;
+      const stomp = p.state === 'angry' ? Math.abs(Math.sin(now / 95)) * 0.16 : 0;   // злится — топает
+      p.g.position.set(p.x, (run ? Math.abs(Math.sin(ph)) * 0.05 : 0) + stomp, p.z); p.g.rotation.y = Math.atan2(faceX, faceZ);
+      p.legs[0].rotation.x = sw; p.legs[1].rotation.x = -sw;
+      // злится: красный, кулак вверх и трясёт; иначе рука качается в такт
+      const angry = p.state === 'angry'; p.mat.color.setRGB(1, angry ? 0.72 : 1, angry ? 0.66 : 1);
+      p.arm.rotation.z = angry ? 2.6 + Math.sin(now / 45) * 0.35 : 0.18; p.arm.rotation.x = angry ? 0 : -sw * 0.8;
+      // зонт: раскрывается пружинкой и закрывается
+      const want = p.state === 'umbrella' ? 1 : 0; p.umbK += (want - p.umbK) * Math.min(1, dt * (want ? 9 : 7));
+      p.umb.visible = p.umbK > 0.02; p.umb.scale.set(p.umbK, Math.min(1.15, p.umbK * (1 + 0.15 * (1 - p.umbK))), p.umbK);
+      this.shadows.setMatrixAt(i, m4.compose(pv.set(p.x, 0.025, p.z), q.identity(), sv.set(1.1 + p.umbK * 0.6, 1, 1.1 + p.umbK * 0.6)));
+    });
+    this.shadows.instanceMatrix.needsUpdate = true;
+  },
+  // 2D: над злыми — красная «жилка» гнева, пульсирует
+  draw2d(c){
+    if (!this.list.length || G.screen === 'menu') return; const now = G.vt;
+    for (const p of this.list){ if (p.state !== 'angry') continue;
+      const v = FX.project(p.x, 1.55 * PEOPLE.SCALE, p.z); if (!v.vis) continue; const k = 1 + 0.18 * Math.sin(now / 70);
+      c.save(); c.translate(v.x + 20, v.y + 2); c.scale(k * 1.2, k * 1.2); c.lineCap = 'round';   // сбоку от головы: надпись — над ней
+      for (const [w, st] of [[5, '#ffffff'], [2.4, '#e03131']]){ c.lineWidth = w; c.strokeStyle = st;
+        for (const [sx, sy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]){ const a = Math.atan2(-sy, -sx); c.beginPath(); c.arc(sx * 6.5, sy * 6.5, 4.2, a - 0.75, a + 0.75); c.stroke(); } }
+      c.restore(); }
   },
 };
 
@@ -2039,8 +2753,10 @@ const fmtM = (m) => m.toFixed(1).replace('.', ',');
 const bestOf = (li) => isPlace(li) ? (G.save.places || {})[li] || 0 : G.save.best[li] || 0;
 // Спайк «уровень-место»: один уровень, собранный руками, рядом с кампанией — сравнить с генератором.
 function placeButton(){
-  return '<div class="spike"><small>Спайк · уровень-место</small>' + Object.keys(PLACES).map(id =>
-    `<button class="btn sec place${G.S && G.S.li === id ? ' cur' : ''}" data-act="place" data-id="${id}">${PLACES[id].name}<small>${'★'.repeat(bestOf(id))}</small></button>`).join('') + '</div>';
+  const btn = (id, label) => `<button class="btn sec place${G.S && G.S.li === id ? ' cur' : ''}" data-act="place" data-id="${id}">${label}<small>${'★'.repeat(bestOf(id))}</small></button>`;
+  const water = Object.keys(PLACES).filter(id => PLACES[id].water), old = Object.keys(PLACES).filter(id => !PLACES[id].water);
+  return '<div class="spike"><small>Спайк · новый полив</small>' + water.map((id, k) => btn(id, (k + 1) + '. ' + PLACES[id].name)).join('') + '</div>'
+    + '<div class="spike"><small>Спайк · уровень-место</small>' + old.map(id => btn(id, PLACES[id].name)).join('') + '</div>';
 }
 function goto(screen){
   const prev = G.screen; G.screen = screen; log('screen', screen, prev);
@@ -2067,7 +2783,7 @@ function goto(screen){
     for (let k = 0; k < st; k++) Sfx.later((0.25 + k * 0.28) * 1000, () => Sfx.star(k));
     ov.classList.add('clear', 'bottom');
     const grew = S.over === 'win' ? (S.cloud.r / CFG.R0).toFixed(1).replace('.', ',') : null;
-    card.innerHTML = `<h2>Оазис ожил!</h2><div class="stars">${[0, 1, 2].map(k => k < st ? `<b style="animation-delay:${0.25 + k * 0.28}s">★</b>` : '★').join('')}</div>
+    card.innerHTML = `<h2>${S.lv.water ? (S.lv.decor && S.lv.decor.lake ? "Озеро ожило!" : "Долина ожила!") : "Оазис ожил!"}</h2><div class="stars">${[0, 1, 2].map(k => k < st ? `<b style="animation-delay:${0.25 + k * 0.28}s">★</b>` : '★').join('')}</div>
       <p>${grew ? 'Тучка выросла в ' + grew + ' раза: ' + fmtM(CFG.R0) + '&nbsp;→ ' + fmtM(S.cloud.r) + '&nbsp;м<br>сама полила ' + Math.round(S.ownPct * 100) + '%' : 'лучший результат уровня'}</p><button class="btn" data-act="next">${!isPlace(S.li) && S.li + 1 < LEVELS.length ? 'Дальше' : 'В меню'}</button><button class="btn sec" data-act="retry">Ещё раз</button>`;
   } else if (screen === 'lose'){
     const S = G.S || newState(G.save.level);
@@ -2159,9 +2875,14 @@ const KIND_ICON = {
   field: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="10.5" ry="6.5" fill="#b9824c"/><ellipse cx="12" cy="13" rx="9" ry="5.2" fill="#6b4a2f"/><g stroke="#86d160" stroke-width="1.6" stroke-linecap="round"><path d="M5 10.5h14M4 13h16M5 15.5h14"/></g></svg>',
   grove: '<svg viewBox="0 0 24 24"><g fill="#9b6b3f"><rect x="5.2" y="13" width="1.6" height="6" rx=".5"/><rect x="11.2" y="11" width="1.6" height="8" rx=".5"/><rect x="17.2" y="13" width="1.6" height="6" rx=".5"/></g><g fill="#58b04a"><circle cx="6" cy="11.5" r="3.6"/><circle cx="12" cy="8.5" r="4.4"/><circle cx="18" cy="11.5" r="3.6"/></g></svg>',
   tree: '<svg viewBox="0 0 24 24"><rect x="11.1" y="12" width="1.8" height="8" rx=".6" fill="#9b6b3f"/><circle cx="12" cy="9.5" r="6" fill="#58b04a"/><circle cx="9.5" cy="10.5" r="1.1" fill="#ff9a3c"/><circle cx="14.2" cy="8.4" r="1.1" fill="#ff9a3c"/></svg>',
+  bigtree: '<svg viewBox="0 0 24 24"><path d="M10 22l.8-9h2.4l.8 9z" fill="#9b6b3f"/><circle cx="12" cy="9" r="7.5" fill="#3ea24a"/><circle cx="6.5" cy="11" r="4" fill="#44b04c"/><circle cx="17.5" cy="11" r="4" fill="#44b04c"/><g fill="#ff7a2e"><circle cx="9" cy="8" r="1.2"/><circle cx="15" cy="7" r="1.2"/><circle cx="12" cy="12" r="1.2"/></g></svg>',
 };
 // Прогресс до следующей цели — вехи, потом оазиса: от размера, с которым тучка вошла в ярус, до размера цели (по влаге).
 function stageGoal(S){
+  if (S.water){   // спайк: прогресс до следующей ступени тучки (по влаге)
+    const L = WATER.STAGES, st = S.cloud.stage, nx = Math.min(st + 1, L.length - 1), m0 = st ? moistForRadius(L[st].r, S.gk) : 0, m1 = moistForRadius(L[nx].r, S.gk);
+    return { bed: S.lv.beds[S.lmId], gate: false, frac: st === nx ? 1 : clamp01((S.cloud.moist - m0) / Math.max(1e-6, m1 - m0)), ready: S.ready, st, nx };
+  }
   const g = nextGateBed(S), bed = g || S.lv.beds[S.lmId], r0 = Math.min(G.stageR0 || CFG.R0, bed.R * 0.999);
   const m0 = moistForRadius(r0, S.gk), m1 = moistForRadius(bed.R, S.gk);
   return { bed, gate: !!g, frac: clamp01((S.cloud.moist - m0) / Math.max(1e-6, m1 - m0)), ready: g ? !!S.gateReady[g.id] : S.ready };
@@ -2175,13 +2896,20 @@ function hud(force){
   const sg = stageGoal(S), gw = (sg.frac * 100).toFixed(1) + '%', kind = bedKind(sg.bed, !sg.gate);
   if (hudCache.gw !== gw){ hudCache.gw = gw; $('grow-fill').style.width = gw; }
   $('grow-fill').classList.toggle('ready', sg.ready && !S.over);
-  if (hudCache.goal !== sg.bed.id){
+  if (S.water){   // спайк: полоса — до следующей ступени, иконки — что по силам сейчас и что будет
+    const L = WATER.STAGES, key = 'st' + sg.st;
+    if (hudCache.goal !== key){ const first = hudCache.goal === -1; hudCache.goal = key;
+      const kindAt = (k) => k === L.length - 1 ? bedKind(S.lv.beds[S.lmId], true) : L[k].kind;   // последняя ступень — финал места (дерево или озеро)
+      $('grow-from').innerHTML = KIND_ICON[kindAt(sg.st)] || KIND_ICON.tree; $('grow-to').innerHTML = KIND_ICON[kindAt(sg.nx)] || KIND_ICON.tree;
+      if (!first) ['grow-from', 'grow-to'].forEach(id => { const n = $(id); n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop'); }); }
+    setText('grow-txt', sg.ready ? 'Муссон! ' + finalWake(S).toLowerCase() : L[sg.st].name + ' → ' + L[sg.nx].name);
+  } else if (hudCache.goal !== sg.bed.id){
     const first = hudCache.goal === -1, top = gateTop(S), last = top >= 0 ? S.lv.beds[S.lv.gates[top]] : null;
     hudCache.goal = sg.bed.id;
     $('grow-from').innerHTML = KIND_ICON[last ? bedKind(last, false) : 'pot']; $('grow-to').innerHTML = KIND_ICON[kind] || KIND_ICON.oasis;
     if (!first) ['grow-from', 'grow-to'].forEach(id => { const n = $(id); n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop'); });
   }
-  setText('grow-txt', sg.ready ? (sg.gate ? 'можно! лети к вехе' : 'можно! лети к оазису') : 'до ' + KIND_GEN[kind]);
+  if (!S.water) setText('grow-txt', sg.ready ? (sg.gate ? 'можно! лети к вехе' : 'можно! лети к оазису') : 'до ' + KIND_GEN[kind]);
   const own = S.over === 'win' ? S.ownPct : ownPct(S);   // звёзды считают то же «своё», что и HUD
   setText('pct-txt', Math.floor(own * 100) + '%');
   setText('timer', Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'));
@@ -2191,7 +2919,7 @@ function hud(force){
   if (hudCache.st !== st){ hudCache.st = st; const n = st >= 10 ? st / 10 : st;
     $('pct-stars').querySelectorAll('b').forEach((t, k) => { t.classList.toggle('on', k > 0 ? k < n : S.over === 'win'); t.classList.toggle('pre', st >= 10 && k > 0 && k < n); }); }
   const K = (S.lv.gates || []).length, gd = gateTop(S) + 1;   // сколько дороги пройдено: пропущенная веха позади не держит счёт
-  setText('pct-goal', (gd < K ? 'вехи ' + gd + ' из ' + K : S.ready ? 'оазис ждёт!' : 'полей оазис') + (S.struggle !== 'off' ? (S.struggle === 'hard' ? ' · тяжело' : ' · копится') : ''));
+  setText('pct-goal', S.water ? 'ступень ' + (S.cloud.stage + 1) + ' из ' + WATER.STAGES.length : (gd < K ? 'вехи ' + gd + ' из ' + K : S.ready ? 'оазис ждёт!' : 'полей оазис') + (S.struggle !== 'off' ? (S.struggle === 'hard' ? ' · тяжело' : ' · копится') : ''));
   $('pct-goal').classList.toggle('ready', S.ready && !S.over);
 }
 
@@ -2237,9 +2965,9 @@ function keyVec(){
 let lastSize = '';
 function fit(){
   const r = gameEl.getBoundingClientRect(); if (!r.width || !r.height) return;
-  const key = r.width + 'x' + r.height; if (key === lastSize) return; lastSize = key;
-  renderer.setSize(r.width, r.height, false);
-  const D = Math.min(window.devicePixelRatio || 1, 2);
+  const D = Math.min(window.devicePixelRatio || 1, SH.DPR_MAX), dpr = Math.min(D, G.dprCap || SH.DPR_MAX);   // 3D — с потолком адаптива, 2D-слой всегда чёткий
+  const key = r.width + 'x' + r.height + '@' + dpr; if (key === lastSize) return; lastSize = key;
+  renderer.setPixelRatio(dpr); renderer.setSize(r.width, r.height, false);
   fx2d.width = Math.round(r.width * D); fx2d.height = Math.round(r.height * D);
   camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
   if (G.S) placeCamera();
@@ -2266,7 +2994,7 @@ function draw2d(){
     c2.beginPath(); c2.arc(ax + v.x * VIEW.JOY_PX, ay + v.y * VIEW.JOY_PX, 18, 0, Math.PI * 2); c2.fill();
     c2.globalAlpha = 1;
   }
-  FX.draw2d(c2);
+  FX.draw2d(c2); People.draw2d(c2);
 }
 
 // --- цикл: rAF + watchdog; время абсолютное, повторный тик безопасен (§4) ---
@@ -2282,15 +3010,33 @@ function update(dms){
     if (ev.length) onEvents(ev);
   }
   if (G.endAt && G.vt >= G.endAt) finishEnd();
-  FX.update(dt); WinScene.update(dt); Sfx.update(dt);
+  FX.update(dt); WinScene.update(dt); People.update(dt); Sfx.update(dt);
   updateView(dt);
   if (G.screen === 'playing' || G.screen === 'paused') hud();
 }
 function render(){ renderer.render(scene, camera); draw2d(); }
+// Адаптивное разрешение 3D (пресет): партия две секунды подряд медленнее ~48 к/с — сцена рисуется мельче (×0,8 за шаг,
+// не ниже SH.DPR_MIN). Не помогло (кадр не ускорился — например, энергосбережение iOS держит 30 к/с) — вернуть и не трогать.
+const DPRA = { t0: 0, n: 0, sum: 0, prev: 0, check: false, lock: false, was: 0 };
+function adaptDpr(now, fms){
+  if (G.screen !== 'playing' || document.hidden || DPRA.lock || G.timeScale !== 1){ DPRA.t0 = now; DPRA.n = DPRA.sum = 0; return; }
+  if (fms < 100){ DPRA.n++; DPRA.sum += fms; }          // одиночные рывки (сборка уровня) не в счёт
+  if (now - DPRA.t0 < 2000) return;
+  const avg = DPRA.n ? DPRA.sum / DPRA.n : 0, enough = DPRA.n >= 40; DPRA.t0 = now; DPRA.n = DPRA.sum = 0;
+  if (!enough) return;
+  if (DPRA.check){ DPRA.check = false;
+    if (avg > DPRA.prev * 0.9){ G.dprCap = DPRA.was; DPRA.lock = true; fit(); log('event', 'dpr', 'revert ' + G.dprCap + ' avg=' + avg.toFixed(1)); return; } }
+  const cur = renderer.getPixelRatio();
+  if (avg > SH.DPR_SLOW_MS && cur > SH.DPR_MIN){
+    DPRA.was = G.dprCap || SH.DPR_MAX; DPRA.prev = avg; DPRA.check = true;
+    const nx = Math.round(cur * 0.8 * 100) / 100; G.dprCap = nx < SH.DPR_MIN * 1.1 ? SH.DPR_MIN : nx; fit();
+    log('event', 'dpr', G.dprCap + ' avg=' + avg.toFixed(1) + 'ms');
+  }
+}
 function tick(){
   const p = performance.now(), d = Math.min(250, p - lastPerf); lastPerf = p; lastTickAt = p;
   if (G.paused) return;
-  update(d); render();
+  update(d); render(); adaptDpr(p, d);
 }
 function frame(){ tick(); requestAnimationFrame(frame); }
 setInterval(() => { if (performance.now() - lastTickAt > 120) tick(); }, 40);
